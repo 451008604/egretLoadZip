@@ -1,0 +1,15 @@
+{
+	"groups": [
+		{
+			"keys": "test_cfg",
+			"name": "preload"
+		}
+	],
+	"resources": [
+		{
+			"url": "assets/test.cfg",
+			"type": "bin",
+			"name": "test_cfg"
+		}
+	]
+}
