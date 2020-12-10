@@ -51,11 +51,6 @@ class Main extends eui.UILayer {
         egret.registerImplementation("eui.IAssetAdapter", assetAdapter);
         egret.registerImplementation("eui.IThemeAdapter", new ThemeAdapter());
 
-        // let R = RES as any;
-        // //重写RES.ResourceLoader的loadResource
-        // R.ResourceLoader.prototype.loadResource = function (r: RES.ResourceInfo, p?: RES.processor.Processor) {
-        //     console.log(r, p);
-        // }
         this.runGame().catch(e => {
             console.log(e);
         })
@@ -64,6 +59,42 @@ class Main extends eui.UILayer {
     private async runGame() {
 
         await this.loadResource()
+        console.time("initRes");
+        Main.JSZIP = await this.initRes() as JSZip;
+        console.timeEnd("initRes");
+
+        let R = RES as any;
+        //重写RES.ResourceLoader的loadResource
+        R.ResourceLoader.prototype.loadResource = function (r: RES.ResourceInfo, p?: RES.processor.Processor) {
+            console.log(r, p);
+            if (!p) {
+                if (RES.FEATURE_FLAG.FIX_DUPLICATE_LOAD == 1) {
+                    var s = RES.host.state[r.root + r.name];
+                    if (s == 2) {
+                        return Promise.resolve(RES.host.get(r));
+                    }
+                    if (s == 1) {
+                        return r.promise;
+                    }
+                }
+                p = RES.processor.isSupport(r);
+            }
+            if (!p) {
+                throw new RES.ResourceManagerError(2001, r.name, r.type);
+            }
+            RES.host.state[r.root + r.name] = 1;
+
+            var promise = null;
+            if (Main.JSZIP && Main.JSZIP.file(Main.ResList[r.name])) {
+                console.log(Main.JSZIP.file(Main.ResList[r.name]).async("base64"));
+                promise = Main.JSZIP.file(Main.ResList[r.name]).async("base64");
+            } else {
+                promise = p.onLoadStart(RES.host, r);
+            }
+            r.promise = promise;
+            console.log(r)
+            return promise;
+        }
         this.createGameScene();
         // const result = await RES.getResAsync("description_json")
         // this.startAnimation(result);
@@ -105,95 +136,116 @@ class Main extends eui.UILayer {
      * Create scene interface
      */
     protected async createGameScene() {
-        let sky = this.createBitmapByName("bg_jpg")
+        console.time();
+        let sky = await this.createBitmapByName("bg_jpg")
+        console.timeEnd()
         this.addChild(sky);
-        // let stageW = this.stage.stageWidth;
-        // let stageH = this.stage.stageHeight;
-        // sky.width = stageW;
-        // sky.height = stageH;
+        let stageW = this.stage.stageWidth;
+        let stageH = this.stage.stageHeight;
+        sky.width = stageW;
+        sky.height = stageH;
 
-        // let topMask = new egret.Shape();
-        // topMask.graphics.beginFill(0x000000, 0.5);
-        // topMask.graphics.drawRect(0, 0, stageW, 172);
-        // topMask.graphics.endFill();
-        // topMask.y = 33;
-        // this.addChild(topMask);
+        let topMask = new egret.Shape();
+        topMask.graphics.beginFill(0x000000, 0.5);
+        topMask.graphics.drawRect(0, 0, stageW, 172);
+        topMask.graphics.endFill();
+        topMask.y = 33;
+        this.addChild(topMask);
 
-        // let icon: egret.Bitmap = this.createBitmapByName("egret_icon_png");
-        // this.addChild(icon);
-        // icon.x = 26;
-        // icon.y = 33;
+        let icon = await this.createBitmapByName("egret_icon_png");
+        this.addChild(icon);
+        icon.x = 26;
+        icon.y = 33;
 
-        // let line = new egret.Shape();
-        // line.graphics.lineStyle(2, 0xffffff);
-        // line.graphics.moveTo(0, 0);
-        // line.graphics.lineTo(0, 117);
-        // line.graphics.endFill();
-        // line.x = 172;
-        // line.y = 61;
-        // this.addChild(line);
+        let line = new egret.Shape();
+        line.graphics.lineStyle(2, 0xffffff);
+        line.graphics.moveTo(0, 0);
+        line.graphics.lineTo(0, 117);
+        line.graphics.endFill();
+        line.x = 172;
+        line.y = 61;
+        this.addChild(line);
 
 
-        // let colorLabel = new egret.TextField();
-        // colorLabel.textColor = 0xffffff;
-        // colorLabel.width = stageW - 172;
-        // colorLabel.textAlign = "center";
-        // colorLabel.text = "Hello Egret";
-        // colorLabel.size = 24;
-        // colorLabel.x = 172;
-        // colorLabel.y = 80;
-        // this.addChild(colorLabel);
+        let colorLabel = new egret.TextField();
+        colorLabel.textColor = 0xffffff;
+        colorLabel.width = stageW - 172;
+        colorLabel.textAlign = "center";
+        colorLabel.text = "Hello Egret";
+        colorLabel.size = 24;
+        colorLabel.x = 172;
+        colorLabel.y = 80;
+        this.addChild(colorLabel);
 
-        // let textfield = new egret.TextField();
-        // this.addChild(textfield);
-        // textfield.alpha = 0;
-        // textfield.width = stageW - 172;
-        // textfield.textAlign = egret.HorizontalAlign.CENTER;
-        // textfield.size = 24;
-        // textfield.textColor = 0xffffff;
-        // textfield.x = 172;
-        // textfield.y = 135;
-        // this.textfield = textfield;
+        let textfield = new egret.TextField();
+        this.addChild(textfield);
+        textfield.alpha = 0;
+        textfield.width = stageW - 172;
+        textfield.textAlign = egret.HorizontalAlign.CENTER;
+        textfield.size = 24;
+        textfield.textColor = 0xffffff;
+        textfield.x = 172;
+        textfield.y = 135;
+        this.textfield = textfield;
 
-        // let button = new eui.Button();
-        // button.label = "Click!";
-        // button.horizontalCenter = 0;
-        // button.verticalCenter = 0;
-        // this.addChild(button);
-        // button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onButtonClick, this);
+        let button = new eui.Button();
+        button.label = "Click!";
+        button.horizontalCenter = 0;
+        button.verticalCenter = 0;
+        this.addChild(button);
+        button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onButtonClick, this);
     }
-    /**
-     * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
-     * Create a Bitmap object according to name keyword.As for the property of name please refer to the configuration file of resources/resource.json.
-     */
-    private async createBitmapByName(name: string) {
-        return RES.getResByUrl("resource/assets/test.cfg").then((data) => {
-            console.log(data);
-            return JSZip.loadAsync(data).then((zipdata) => {
-                console.log(zipdata);
-                zipdata.forEach((relativePath, JSZip) => {
-                    let tag = name.substring(name.length - 3);
-                    name = name.substring(0, name.length - 4) + "." + tag;
-                    if (relativePath.indexOf(name) != -1) {
-                        JSZip.async("base64").then((base64) => {
-                            base64 = "data:image/" + tag + ";base64," + base64;
-                            const img: eui.Image = new eui.Image();
-                            img.source = base64;
-                            return img
-                        });
+
+    static JSZIP: JSZip;
+    static ResList: Object = Object.create(null);
+
+    private initRes() {
+        return new Promise(async (resolve, reject) => {
+            let self = this;
+            // 加载zip文件
+            const _data = await RES.getResByUrl("resource/assets.cfg").catch((err) => {
+                console.error(err.error);
+            });
+            // 解析zip文件内容
+            const _zipdata = await JSZip.loadAsync(_data);
+            console.info("_zipdata", _zipdata);
+            // 获取所有资源的相对路径
+            let filePathList = Object.keys(_zipdata.files);
+            console.info("filePathList", filePathList);
+            // 遍历files给每一项资源标记简称（file_jpg : "resource\assets\file.jpg"）
+            for (let i = 0; i < filePathList.length; i++) {
+                const filePath = filePathList[i];
+                if (filePath.lastIndexOf(".") != -1) {
+                    let keyName = "";
+                    // 如果不是在根目录下
+                    if (filePath.lastIndexOf("\\") != -1) {
+                        keyName = filePath.substring(filePath.lastIndexOf("\\") + 1, filePath.lastIndexOf(".")) + "_" + filePath.substring(filePath.lastIndexOf(".") + 1);
+                    } else {
+                        keyName = filePath.substring(0, filePath.lastIndexOf(".")) + "_" + filePath.substring(filePath.lastIndexOf(".") + 1);
                     }
-                })
-                console.info(zipdata.file(`resource\\assets\\bg.jpg`))
-                return null;
-                // return zipdata.file(`resource\\assets\\bg.jpg`).async("base64");
-            }).then((base64) => {
-                // console.info(base64)
-                // if (base64) {
-                //     return img;
-                // }
-            }).catch((err) => { console.error(err) });
-        }).catch((err) => { console.error(err) });
-        return;
+                    if (filePath.indexOf("\\")) {
+                        (filePath as any).replaceAll("\\", "\\\\");
+                    }
+
+                    Main.ResList[keyName] = filePath;
+                }
+            }
+            resolve(_zipdata)
+            console.info("Main.ResList", Main.ResList);
+        })
+    }
+
+
+    private async createBitmapByName(name: string) {
+        // let _base64 = await Main.JSZIP.files[Main.ResList[name]].async("base64");
+        let _base64 = await Main.JSZIP.file(Main.ResList[name]).async("base64");
+        // console.info("_base64", _base64)
+        const tag = name.substring(name.lastIndexOf("_") + 1);
+        _base64 = "data:image/" + tag + ";base64," + _base64;
+        let img = new eui.Image();
+        img.source = _base64;
+        // img.source = name;
+        return img as eui.Image;
     }
     /**
      * 描述文件加载成功，开始播放动画

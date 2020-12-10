@@ -31,7 +31,7 @@ const config: ResourceManagerConfig = {
                     new ZipPlugin({
                         mergeSelector: (path) => {
                             if (path.indexOf("resource/assets/") >= 0) {
-                                return "/resource/test.cfg";
+                                return "/resource/assets.cfg";
                             }
                             return "";
                         }
@@ -42,7 +42,8 @@ const config: ResourceManagerConfig = {
                         typescript: { mode: 'legacy' },
                         html: {
                             templateFilePath: "template/web/index.html"
-                        }
+                        },
+                        open: true
                     })
                 ]
             }
@@ -71,7 +72,7 @@ const config: ResourceManagerConfig = {
                     new ZipPlugin({
                         mergeSelector: (path) => {
                             if (path.indexOf("resource/assets/") >= 0) {
-                                return "test.cfg";
+                                return "resource/assets.cfg";
                             }
                             return "";
                         }
