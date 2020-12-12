@@ -38,11 +38,11 @@ class Main extends eui.UILayer {
         })
 
         egret.lifecycle.onPause = () => {
-            egret.ticker.pause();
+            // egret.ticker.pause();
         }
 
         egret.lifecycle.onResume = () => {
-            egret.ticker.resume();
+            // egret.ticker.resume();
         }
 
         //inject the custom material parser
@@ -62,42 +62,7 @@ class Main extends eui.UILayer {
         console.time("initRes");
         Main.JSZIP = await this.initRes() as JSZip;
         console.timeEnd("initRes");
-
-        let R = RES as any;
-        //重写RES.ResourceLoader的loadResource
-        R.ResourceLoader.prototype.loadResource = function (r: RES.ResourceInfo, p?: RES.processor.Processor) {
-            console.log(r, p);
-            if (!p) {
-                if (RES.FEATURE_FLAG.FIX_DUPLICATE_LOAD == 1) {
-                    var s = RES.host.state[r.root + r.name];
-                    if (s == 2) {
-                        return Promise.resolve(RES.host.get(r));
-                    }
-                    if (s == 1) {
-                        return r.promise;
-                    }
-                }
-                p = RES.processor.isSupport(r);
-            }
-            if (!p) {
-                throw new RES.ResourceManagerError(2001, r.name, r.type);
-            }
-            RES.host.state[r.root + r.name] = 1;
-
-            var promise = null;
-            if (Main.JSZIP && Main.JSZIP.file(Main.ResList[r.name])) {
-                console.log(Main.JSZIP.file(Main.ResList[r.name]).async("base64"));
-                promise = Main.JSZIP.file(Main.ResList[r.name]).async("base64");
-            } else {
-                promise = p.onLoadStart(RES.host, r);
-            }
-            r.promise = promise;
-            console.log(r)
-            return promise;
-        }
         this.createGameScene();
-        // const result = await RES.getResAsync("description_json")
-        // this.startAnimation(result);
         await platform.login();
         const userInfo = await platform.getUserInfo();
         console.log(userInfo);
@@ -118,15 +83,14 @@ class Main extends eui.UILayer {
         }
     }
 
-    private loadTheme() {
+    private async loadTheme() {
         return new Promise((resolve, reject) => {
             // load skin theme configuration file, you can manually modify the file. And replace the default skin.
             //加载皮肤主题配置文件,可以手动修改这个文件。替换默认皮肤。
             let theme = new eui.Theme("resource/default.thm.json", this.stage);
-            theme.addEventListener(eui.UIEvent.COMPLETE, () => {
-                resolve();
+            theme.addEventListener(eui.UIEvent.COMPLETE, (e) => {
+                resolve(e);
             }, this);
-
         })
     }
 
@@ -136,12 +100,13 @@ class Main extends eui.UILayer {
      * Create scene interface
      */
     protected async createGameScene() {
-        console.time();
-        let sky = await this.createBitmapByName("bg_jpg")
-        console.timeEnd()
-        this.addChild(sky);
         let stageW = this.stage.stageWidth;
         let stageH = this.stage.stageHeight;
+        console.time();
+        let texture = await Main.getTexture("bg_jpg");
+        console.timeEnd()
+        let sky = new egret.Bitmap(texture);
+        this.addChild(sky);
         sky.width = stageW;
         sky.height = stageH;
 
@@ -152,7 +117,8 @@ class Main extends eui.UILayer {
         topMask.y = 33;
         this.addChild(topMask);
 
-        let icon = await this.createBitmapByName("egret_icon_png");
+        texture = await Main.getTexture("egret_icon_png");
+        let icon = new eui.Image(texture);
         this.addChild(icon);
         icon.x = 26;
         icon.y = 33;
@@ -194,24 +160,23 @@ class Main extends eui.UILayer {
         button.verticalCenter = 0;
         this.addChild(button);
         button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onButtonClick, this);
+
+        // const result = await RES.getResAsync("description_json");
+        // this.startAnimation(result);
     }
 
     static JSZIP: JSZip;
     static ResList: Object = Object.create(null);
 
     private initRes() {
-        return new Promise(async (resolve, reject) => {
-            let self = this;
+        return new Promise<JSZip>(async (resolve, reject) => {
+            console.group("zip解析");
             // 加载zip文件
-            const _data = await RES.getResByUrl("resource/assets.cfg").catch((err) => {
-                console.error(err.error);
-            });
+            const _data = RES.getRes("assets_cfg");
             // 解析zip文件内容
             const _zipdata = await JSZip.loadAsync(_data);
-            console.info("_zipdata", _zipdata);
             // 获取所有资源的相对路径
             let filePathList = Object.keys(_zipdata.files);
-            console.info("filePathList", filePathList);
             // 遍历files给每一项资源标记简称（file_jpg : "resource\assets\file.jpg"）
             for (let i = 0; i < filePathList.length; i++) {
                 const filePath = filePathList[i];
@@ -223,30 +188,41 @@ class Main extends eui.UILayer {
                     } else {
                         keyName = filePath.substring(0, filePath.lastIndexOf(".")) + "_" + filePath.substring(filePath.lastIndexOf(".") + 1);
                     }
-                    if (filePath.indexOf("\\")) {
-                        (filePath as any).replaceAll("\\", "\\\\");
-                    }
-
                     Main.ResList[keyName] = filePath;
                 }
             }
-            resolve(_zipdata)
-            console.info("Main.ResList", Main.ResList);
+            resolve(_zipdata);
+            console.info("获取资源原始数据 : ", _data);
+            console.info("JSZIP解析原始数据 : ", _zipdata);
+            console.info("获取包内所有资源的路径 : ", filePathList);
+            console.info("资源名称和路径的映射 : ", Main.ResList);
+            console.groupEnd();
         })
     }
 
-
-    private async createBitmapByName(name: string) {
-        // let _base64 = await Main.JSZIP.files[Main.ResList[name]].async("base64");
-        let _base64 = await Main.JSZIP.file(Main.ResList[name]).async("base64");
-        // console.info("_base64", _base64)
-        const tag = name.substring(name.lastIndexOf("_") + 1);
-        _base64 = "data:image/" + tag + ";base64," + _base64;
-        let img = new eui.Image();
-        img.source = _base64;
-        // img.source = name;
-        return img as eui.Image;
+    /**
+     * 获取一个 egret.Texture 对象。可用于赋值给 egret.Bitmap的texture属性 和 eui.Image的source属性。
+     * @param name 资源名称。例：image_jpg
+     * @param dataType 要解析的类型。
+     */
+    static async getTexture(name: string, dataType: "base64" | "arraybuffer" = "arraybuffer") {
+        let texture = new egret.Texture();
+        let fileData = await Main.JSZIP.files[Main.ResList[name]].async(dataType);
+        texture = await new Promise<egret.Texture>((resolve, reject) => {
+            egret.BitmapData.create(dataType as any, fileData as any, (data) => {
+                texture.bitmapData = data;
+                resolve(texture);
+            });
+        });
+        // console.groupCollapsed("createBitmapByName", name);
+        // console.info("name : ", name);
+        // console.info("dataType : ", dataType);
+        // console.info("fileData : ", fileData);
+        // console.info("texture : ", texture);
+        // console.groupEnd();
+        return texture;
     }
+
     /**
      * 描述文件加载成功，开始播放动画
      * Description file loading is successful, start to play the animation

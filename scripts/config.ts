@@ -31,7 +31,9 @@ const config: ResourceManagerConfig = {
                     new ZipPlugin({
                         mergeSelector: (path) => {
                             if (path.indexOf("resource/assets/") >= 0) {
-                                return "/resource/assets.cfg";
+                                if (path.indexOf(".png") > 0 || path.indexOf(".jpg") > 0) {
+                                    return "/resource/assets.cfg";
+                                }
                             }
                             return "";
                         }
@@ -43,7 +45,8 @@ const config: ResourceManagerConfig = {
                         html: {
                             templateFilePath: "template/web/index.html"
                         },
-                        open: true
+                        open: true,
+                        port: 3001
                     })
                 ]
             }
@@ -65,14 +68,27 @@ const config: ResourceManagerConfig = {
                     }),
                     new ExmlPlugin('commonjs'), // 非 EUI 项目关闭此设置
                     // new EuiCompilerPlugin(),//新的 eui 编译器
-                    new UglifyPlugin([{
-                        sources: ["main.js"],
-                        target: "main.min.js"
-                    }]),
+                    new UglifyPlugin([
+                        {
+                            sources: [
+                                "libs/modules/assetsmanager/assetsmanager.min.js",
+                                "libs/modules/game/game.min.js",
+                                "libs/modules/tween/tween.min.js",
+                                "libs/modules/promise/promise.min.js",
+                                "libs/libsrc/jszip/jszip.min.js"
+                            ],
+                            target: "lib.min.js"
+                        },
+                        {
+                            sources: ["main.js"],
+                            target: "main.min.js"
+                        }]),
                     new ZipPlugin({
                         mergeSelector: (path) => {
                             if (path.indexOf("resource/assets/") >= 0) {
-                                return "resource/assets.cfg";
+                                if (path.indexOf(".png") > 0 || path.indexOf(".jpg") > 0) {
+                                    return "resource/assets.cfg";
+                                }
                             }
                             return "";
                         }
