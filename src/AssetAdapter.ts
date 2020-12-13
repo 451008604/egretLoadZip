@@ -40,8 +40,8 @@ class AssetAdapter implements eui.IAssetAdapter {
         function onGetRes(data: any) {
             compFunc.call(thisObject, data, source);
         }
-        if (Main.ResList[source]) {
-            let _data = await Main.getTexture(source);
+        if (jszip.jsziplib.resList[source]) {
+            let _data = await jszip.jsziplib.getTexture(source);
             onGetRes(_data)
         } else if (RES.hasRes(source)) {
             let data = RES.getRes(source);

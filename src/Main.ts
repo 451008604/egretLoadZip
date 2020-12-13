@@ -60,7 +60,7 @@ class Main extends eui.UILayer {
 
         await this.loadResource()
         console.time("initRes");
-        Main.JSZIP = await this.initRes() as JSZip;
+        await jszip.jsziplib.initRes();
         console.timeEnd("initRes");
         this.createGameScene();
         await platform.login();
@@ -103,7 +103,7 @@ class Main extends eui.UILayer {
         let stageW = this.stage.stageWidth;
         let stageH = this.stage.stageHeight;
         console.time();
-        let texture = await Main.getTexture("bg_jpg");
+        let texture = await jszip.jsziplib.getTexture("bg_jpg");
         console.timeEnd()
         let sky = new egret.Bitmap(texture);
         this.addChild(sky);
@@ -117,7 +117,7 @@ class Main extends eui.UILayer {
         topMask.y = 33;
         this.addChild(topMask);
 
-        texture = await Main.getTexture("egret_icon_png");
+        texture = await jszip.jsziplib.getTexture("egret_icon_png");
         let icon = new eui.Image(texture);
         this.addChild(icon);
         icon.x = 26;
@@ -161,66 +161,19 @@ class Main extends eui.UILayer {
         this.addChild(button);
         button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onButtonClick, this);
 
-        // const result = await RES.getResAsync("description_json");
-        // this.startAnimation(result);
-    }
+        const result = await jszip.jsziplib.getJson("description_json");
+        this.startAnimation(result as any);
 
-    static JSZIP: JSZip;
-    static ResList: Object = Object.create(null);
 
-    private initRes() {
-        return new Promise<JSZip>(async (resolve, reject) => {
-            console.group("zip解析");
-            // 加载zip文件
-            const _data = RES.getRes("assets_cfg");
-            // 解析zip文件内容
-            const _zipdata = await JSZip.loadAsync(_data);
-            // 获取所有资源的相对路径
-            let filePathList = Object.keys(_zipdata.files);
-            // 遍历files给每一项资源标记简称（file_jpg : "resource\assets\file.jpg"）
-            for (let i = 0; i < filePathList.length; i++) {
-                const filePath = filePathList[i];
-                if (filePath.lastIndexOf(".") != -1) {
-                    let keyName = "";
-                    // 如果不是在根目录下
-                    if (filePath.lastIndexOf("\\") != -1) {
-                        keyName = filePath.substring(filePath.lastIndexOf("\\") + 1, filePath.lastIndexOf(".")) + "_" + filePath.substring(filePath.lastIndexOf(".") + 1);
-                    } else {
-                        keyName = filePath.substring(0, filePath.lastIndexOf(".")) + "_" + filePath.substring(filePath.lastIndexOf(".") + 1);
-                    }
-                    Main.ResList[keyName] = filePath;
-                }
-            }
-            resolve(_zipdata);
-            console.info("获取资源原始数据 : ", _data);
-            console.info("JSZIP解析原始数据 : ", _zipdata);
-            console.info("获取包内所有资源的路径 : ", filePathList);
-            console.info("资源名称和路径的映射 : ", Main.ResList);
-            console.groupEnd();
-        })
-    }
-
-    /**
-     * 获取一个 egret.Texture 对象。可用于赋值给 egret.Bitmap的texture属性 和 eui.Image的source属性。
-     * @param name 资源名称。例：image_jpg
-     * @param dataType 要解析的类型。
-     */
-    static async getTexture(name: string, dataType: "base64" | "arraybuffer" = "arraybuffer") {
-        let texture = new egret.Texture();
-        let fileData = await Main.JSZIP.files[Main.ResList[name]].async(dataType);
-        texture = await new Promise<egret.Texture>((resolve, reject) => {
-            egret.BitmapData.create(dataType as any, fileData as any, (data) => {
-                texture.bitmapData = data;
-                resolve(texture);
-            });
-        });
-        // console.groupCollapsed("createBitmapByName", name);
-        // console.info("name : ", name);
-        // console.info("dataType : ", dataType);
-        // console.info("fileData : ", fileData);
-        // console.info("texture : ", texture);
-        // console.groupEnd();
-        return texture;
+        // 加载 sheet 内的资源
+        let sheetImg = new eui.Image(await jszip.jsziplib.getTexture("on_png"));
+        this.addChild(sheetImg);
+        sheetImg.x = 200;
+        sheetImg.y = 200;
+        let sheetBg = new egret.Bitmap(await jszip.jsziplib.getTexture("bg(337)_jpg"));
+        this.addChild(sheetBg);
+        sheetBg.x = stageW - sheetBg.height;
+        sheetBg.y = stageH - sheetBg.width;
     }
 
     /**

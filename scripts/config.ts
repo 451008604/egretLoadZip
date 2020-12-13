@@ -31,9 +31,7 @@ const config: ResourceManagerConfig = {
                     new ZipPlugin({
                         mergeSelector: (path) => {
                             if (path.indexOf("resource/assets/") >= 0) {
-                                if (path.indexOf(".png") > 0 || path.indexOf(".jpg") > 0) {
-                                    return "/resource/assets.cfg";
-                                }
+                                return "/resource/assets.cfg";
                             }
                             return "";
                         }
@@ -86,9 +84,7 @@ const config: ResourceManagerConfig = {
                     new ZipPlugin({
                         mergeSelector: (path) => {
                             if (path.indexOf("resource/assets/") >= 0) {
-                                if (path.indexOf(".png") > 0 || path.indexOf(".jpg") > 0) {
-                                    return "resource/assets.cfg";
-                                }
+                                return "resource/assets.cfg";
                             }
                             return "";
                         }
