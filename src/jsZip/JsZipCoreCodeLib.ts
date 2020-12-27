@@ -1,21 +1,20 @@
 module jszip {
-    class JsZipLib {
-        constructor() {
-        }
+    class JsZipCoreCodeLib {
 
         private jsZip: JSZip;
         /**资源名称与文件路径的映射 */
-        public res_name_path_map: Object = Object.create(null);
+        public resNamePathMap: Object = Object.create(null);
         /**已经从压缩包内获取过的资源缓存 */
-        private res_cache: Object = Object.create(null);
-        private texture_sheet: Object = Object.create(null);
+        private resCache: Object = Object.create(null);
+        private textureSheet: Object = Object.create(null);
         /**包含 sheet 图集内资源和未合图资源的总名称列表 */
-        private total_res_name: string[] = [];
+        private totalResName: string[] = [];
 
         public initRes() {
             return new Promise<JSZip>(async (resolve, reject) => {
                 // 加载zip文件
                 const data = await RES.getResAsync("assets_cfg");
+                RES.destroyRes("assets_cfg");
                 // 解析zip文件内容
                 const zipdata = await JSZip.loadAsync(data);
                 // 获取所有资源的相对路径
@@ -41,8 +40,8 @@ module jszip {
                             fileName = filePath.substring(0, lastPointNum);
                             keyName = fileName + "_" + fileSuffix;
                         }
-                        this.res_name_path_map[keyName] = filePath;
-                        this.total_res_name.push(keyName);
+                        this.resNamePathMap[keyName] = filePath;
+                        this.totalResName.push(keyName);
                     }
                 }
 
@@ -56,7 +55,7 @@ module jszip {
                     console.info("获取资源原始数据 : ", data);
                     console.info("JSZIP解析原始数据 : ", zipdata);
                     console.info("获取包内所有资源的路径 : ", filePathList);
-                    console.info("资源名称和路径的映射 : ", this.res_name_path_map);
+                    console.info("资源名称和路径的映射 : ", this.resNamePathMap);
                     console.groupEnd();
                 }
             })
@@ -66,17 +65,17 @@ module jszip {
          * 获取图集 sheet 信息
          */
         private async getSheetList() {
-            let keys = Object.keys(this.res_name_path_map);
+            let keys = Object.keys(this.resNamePathMap);
             for (let i = 0; i < keys.length; i++) {
                 let fileName = keys[i].substring(0, keys[i].lastIndexOf("_"));
-                if (keys.indexOf(fileName + "_png") != -1 && keys.indexOf(fileName + "_json") != -1 && !this.texture_sheet[fileName]) {
+                if (keys.indexOf(fileName + "_png") != -1 && keys.indexOf(fileName + "_json") != -1 && !this.textureSheet[fileName]) {
                     let data = await this.getJson<SheetDataByType>(fileName + "_json");
-                    this.texture_sheet[fileName] = Object.keys(data.frames);
-                    this.total_res_name.push(...Object.keys(data.frames));
+                    this.textureSheet[fileName] = Object.keys(data.frames);
+                    this.totalResName.push(...Object.keys(data.frames));
                 }
             }
             if (DEBUG) {
-                console.info("全部图集 sheet 信息：", this.texture_sheet);
+                console.info("全部图集 sheet 信息：", this.textureSheet);
             }
         }
 
@@ -87,25 +86,27 @@ module jszip {
          */
         public async getRes(_name: string) {
             // 名称标准化
-            for (let i = 0, j = this.total_res_name.length; i < j; i++) {
-                if (this.total_res_name[i].indexOf(_name) == 0) {
-                    _name = this.total_res_name[i];
+            for (let i = 0, j = this.totalResName.length; i < j; i++) {
+                if (this.totalResName[i].indexOf(_name) == 0) {
+                    _name = this.totalResName[i];
                     break;
                 }
             }
-            if (this.res_cache[_name]) {
-                return this.res_cache[_name];
+
+            // 如果已经获取过，则直接从缓存内取出
+            if (this.resCache[_name]) {
+                return this.resCache[_name];
             }
             switch (this.typeSelector(_name)) {
                 case FILE_TYPE.TYPE_XML:
                     break;
                 case FILE_TYPE.TYPE_JSON:
-                    this.res_cache[_name] = await this.getJson(_name);
+                    this.resCache[_name] = await this.getJson(_name);
                     break;
                 case FILE_TYPE.TYPE_SHEET:
                     break;
                 case FILE_TYPE.TYPE_IMAGE:
-                    this.res_cache[_name] = await this.getTexture(_name);
+                    this.resCache[_name] = await this.getTexture(_name);
                     break;
                 case FILE_TYPE.TYPE_FONT:
                     break;
@@ -118,7 +119,10 @@ module jszip {
                 case FILE_TYPE.TYPE_BIN:
                     break;
             }
-            return this.res_cache[_name];
+            let str = this.resNamePathMap[_name]
+            this.jsZip.remove(str)
+            delete this.resNamePathMap[_name]
+            return this.resCache[_name];
         }
 
         /**
@@ -130,7 +134,7 @@ module jszip {
             let texture = new egret.Texture();
             let fileData = null;
             // 判断资源是否在合集内
-            if (this.res_name_path_map[_name]) {
+            if (this.resNamePathMap[_name]) {
                 fileData = await this.getFileData(_name, _dataType);
                 texture = await new Promise<egret.Texture>((resolve, reject) => {
                     egret.BitmapData.create(_dataType as any, fileData as any, (data) => {
@@ -165,9 +169,9 @@ module jszip {
          * @param _name 资源名称。例：image_png
          */
         private async getSheetSpriteTexture(_name: string) {
-            let arr = Object.keys(this.texture_sheet);
+            let arr = Object.keys(this.textureSheet);
             for (let i = 0, j = arr.length; i < j; i++) {
-                if (this.texture_sheet[arr[i]].indexOf(_name) != -1) {
+                if (this.textureSheet[arr[i]].indexOf(_name) != -1) {
                     let sheetConfig = await this.getJson<SheetDataByType>(`${arr[i]}_json`);
                     let sheetTexture = await this.getTexture(`${arr[i]}_png`);
                     let spriteSheet = new egret.SpriteSheet(sheetTexture);
@@ -199,7 +203,7 @@ module jszip {
                 console.info("dataType : ", _dataType);
                 console.groupEnd();
             }
-            return this.res_name_path_map[_name] ? this.jsZip.files[this.res_name_path_map[_name]].async<any>(_dataType) : console.error("压缩文件内未找到 " + _name + " 资源");
+            return this.resNamePathMap[_name] ? this.jsZip.files[this.resNamePathMap[_name]].async<any>(_dataType) : console.error("压缩文件内未找到 " + _name + " 资源");
         }
 
         /**
@@ -257,30 +261,6 @@ module jszip {
     }
 
     /**
-     * sheet 图集内的子 texture 数据类型
-     */
-    interface SheetSpriteDataByType {
-        x: number,
-        y: number,
-        w: number,
-        h: number,
-        offX: number,
-        offY: number,
-        sourceW: number,
-        sourceH: number
-    }
-
-    /**
-     * sheet 图集的数据类型
-     */
-    interface SheetDataByType {
-        file: string,
-        frames: {
-            [key: string]: SheetSpriteDataByType
-        }
-    }
-
-    /**
      * 文件类型
      */
     enum FILE_TYPE {
@@ -295,5 +275,5 @@ module jszip {
         TYPE_TTF = "ttf"
     }
 
-    export let jsziplib = new JsZipLib();
+    export let jsZipCoreCodeLib = new JsZipCoreCodeLib();
 }
