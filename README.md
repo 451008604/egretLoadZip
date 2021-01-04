@@ -30,4 +30,4 @@ new ZipPlugin({
 ```
 await jszip.jsZipCoreCodeLib.getRes("bg_jpg");
 ```
-任何资源都可以通过传入`<fileName>_[type]`这种方式来获取。如果不传入`_type`，则会从压缩包内查找对应`fileName`的资源，如有同名不同类型的资源则优先获取`image`类型
+任何资源都可以通过传入`<fileName>_[type]`这种方式来获取。如果不传入`_type`，则会从压缩包内查找对应`fileName`的资源，如有同名不同类型的资源则会返回`bin`类型
