@@ -4,12 +4,12 @@
 
 PS：此方式为异步加载
 
-## 目前支持的资源格式
+## 支持的资源格式
 JSON、image、spriteSheet
 
 ## 使用方式
 在编译、打包发布时在`scripts/config.ts`内加入脚本插件
-```
+```javascript
 new ZipPlugin({
     mergeSelector: (path) => {
         if (path.indexOf("resource/assets/") >= 0) {
@@ -20,7 +20,7 @@ new ZipPlugin({
 })
 ```
 在`egretProperties.json`内加入`jszip`库的引用
-```
+```json
 {
     "name": "jszip",
     "path": "libs/libsrc/jszip"
