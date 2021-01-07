@@ -1,5 +1,5 @@
 .wing
 bin-debug
 bin-release
-libs
+libs/modules
 resource/assets/myAssets

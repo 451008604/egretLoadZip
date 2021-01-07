@@ -1,11 +1,11 @@
 # egretLoadZip
-此项目为`egret`通过`jszip`库加载并解析资源。
-基本替代了原有`assetsmanager`（因为只有在加载压缩包的时候使用到了）
+> 此项目为`egret`通过`jszip`库加载并解析资源。
+> 基本替代了原有`assetsmanager`（因为只有在加载压缩包的时候使用到了）
 
 PS：此方式为异步加载
 
 ## 支持的资源格式
-JSON、image、spriteSheet
+JSON、image、spriteSheet、dragonBone
 
 ## 使用方式
 在编译、打包发布时在`scripts/config.ts`内加入脚本插件
@@ -19,8 +19,12 @@ new ZipPlugin({
     }
 })
 ```
-在`egretProperties.json`内加入`jszip`库的引用
+在`egretProperties.json`内加入`jszip`、`dragonBones`两个必需库的引用。
+之后`egret b -e`编译引擎
 ```json
+{
+    "name": "dragonBones"
+},
 {
     "name": "jszip",
     "path": "libs/libsrc/jszip"
