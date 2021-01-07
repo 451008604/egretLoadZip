@@ -9,6 +9,14 @@ module jszip {
             [key: string]: SheetSpriteDataByType
         }
     }
+    /**
+     * 生成龙骨时传入参数
+     */
+    export interface dragonBonesDataByType {
+        armatureName: string,
+        animationName?: string,
+        playTimes?: number
+    }
 
     /**
      * sheet 图集内的子 texture 数据类型

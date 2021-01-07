@@ -25,6 +25,9 @@
       "name": "promise"
     },
     {
+      "name": "dragonBones"
+    },
+    {
       "name": "jszip",
       "path": "libs/libsrc/jszip"
     }

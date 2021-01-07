@@ -103,7 +103,7 @@ class Main extends eui.UILayer {
         let stageW = this.stage.stageWidth;
         let stageH = this.stage.stageHeight;
         console.time();
-        let texture = await jszip.jsZipCoreCodeLib.getRes("bg_jpg");
+        let texture = await jszip.jsZipCoreCodeLib.getRes("bg_jpg") as egret.Texture;
         console.timeEnd()
         let sky = new egret.Bitmap(texture);
         this.addChild(sky);
@@ -117,7 +117,7 @@ class Main extends eui.UILayer {
         topMask.y = 33;
         this.addChild(topMask);
 
-        texture = await jszip.jsZipCoreCodeLib.getRes("egret_icon_png");
+        texture = await jszip.jsZipCoreCodeLib.getRes<egret.Texture>("egret_icon_png");
         let icon = new eui.Image(texture);
         this.addChild(icon);
         icon.x = 26;
@@ -170,13 +170,18 @@ class Main extends eui.UILayer {
             let sheetBg = new egret.Bitmap(await jszip.jsZipCoreCodeLib.getRes("bg(337)"));
             this.addChild(sheetBg);
             sheetBg.x = i * 2;
-            sheetBg.y = stageH - sheetBg.width;
+            sheetBg.y = stageH - sheetBg.height;
             sheetBg.scaleX = sheetBg.scaleY = i * 0.01;
         }
         let sheetImg = new eui.Image(await jszip.jsZipCoreCodeLib.getRes("on_png"));
         this.addChild(sheetImg);
         sheetImg.x = 200;
         sheetImg.y = 200;
+
+        let getDragonBones = await jszip.jsZipCoreCodeLib.getRes<dragonBones.EgretArmatureDisplay>("buyu", { armatureName: "buyu", animationName: "buyu", playTimes: 0 });
+        this.addChild(getDragonBones);
+        getDragonBones.x = getDragonBones.width;
+        getDragonBones.y = getDragonBones.height;
     }
 
     /**
