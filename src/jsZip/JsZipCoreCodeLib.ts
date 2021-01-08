@@ -1,4 +1,4 @@
-module jszip {
+namespace jszip {
     class JsZipCoreCodeLib {
 
         private jsZip: JSZip;
@@ -13,10 +13,10 @@ module jszip {
 
         public initRes() {
             return new Promise<JSZip>(async (resolve, reject) => {
-                // 加载zip文件
+                // 加载压缩包文件
                 const data = await RES.getResAsync("assets_cfg");
                 RES.destroyRes("assets_cfg");
-                // 解析zip文件内容
+                // 解析压缩包文件内容
                 const zipdata = await JSZip.loadAsync(data);
                 // 获取所有资源的相对路径
                 const filePathList = Object.keys(zipdata.files);
@@ -69,7 +69,7 @@ module jszip {
             for (let i = 0; i < keys.length; i++) {
                 let fileName = keys[i].substring(0, keys[i].lastIndexOf("_"));
                 if (keys.indexOf(`${fileName}_png`) != -1 && keys.indexOf(`${fileName}_json`) != -1 && !this.textureSheet[fileName]) {
-                    let data = await this.getJson<SheetDataByType>(`${fileName}_json`);
+                    let data = await this.getJson<DataType_sheet>(`${fileName}_json`);
                     if (Object.keys(data).length == 2 && data.frames && data.file) {
                         this.textureSheet[fileName] = Object.keys(data.frames);
                         this.totalResName.push(...Object.keys(data.frames));
@@ -83,11 +83,10 @@ module jszip {
 
 
         /**
-         * 获取资源通用方法。获取过的资源会缓存到`resCache`内，重复获取时可以节省性能。
+         * 获取资源通用方法。获取过的资源会缓存到`resCache`内，重复获取时可以节省性能
          * @param _name 资源名称
-         * @param _args 可能的值：`dragonBonesDataByType` 龙骨数据
          */
-        public async getRes<T = any>(_name: string, _args: dragonBonesDataByType = null): Promise<T> {
+        public async getRes<T = any>(_name: string): Promise<T> {
             // 名称标准化
             for (let i = 0, j = this.totalResName.length; i < j; i++) {
                 if (this.totalResName[i].indexOf(_name) == 0 && _name.length == this.totalResName[i].lastIndexOf("_")) {
@@ -100,49 +99,37 @@ module jszip {
                 return this.resCache[_name];
             }
             switch (this.typeSelector(_name)) {
-                case FILE_TYPE.TYPE_XML:
+                case ENUM_FILE_TYPE.TYPE_XML:
                     break;
-                case FILE_TYPE.TYPE_JSON:
+                case ENUM_FILE_TYPE.TYPE_JSON:
                     this.resCache[_name] = await this.getJson(_name);
                     break;
-                case FILE_TYPE.TYPE_SHEET:
+                case ENUM_FILE_TYPE.TYPE_SHEET:
                     break;
-                case FILE_TYPE.TYPE_DRAGONBONES:
-                    this.resCache[_name] = await this.getDragonBones(_name, _args);
-                    break;
-                case FILE_TYPE.TYPE_IMAGE:
+                case ENUM_FILE_TYPE.TYPE_IMAGE:
                     this.resCache[_name] = await this.getTexture(_name);
                     break;
-                case FILE_TYPE.TYPE_FONT:
+                case ENUM_FILE_TYPE.TYPE_FONT:
                     break;
-                case FILE_TYPE.TYPE_TEXT:
+                case ENUM_FILE_TYPE.TYPE_TEXT:
                     break;
-                case FILE_TYPE.TYPE_SOUND:
+                case ENUM_FILE_TYPE.TYPE_SOUND:
                     break;
-                case FILE_TYPE.TYPE_TTF:
+                case ENUM_FILE_TYPE.TYPE_TTF:
                     break;
-                case FILE_TYPE.TYPE_BIN:
+                case ENUM_FILE_TYPE.TYPE_BIN:
                     break;
             }
 
-            if (this.resCache[_name]) {
-                if (this.resNamePathMap[`${_name}_ske_json`] && this.resNamePathMap[`${_name}_tex_json`] && this.resNamePathMap[`${_name}_tex_png`]) {
-                    this.jsZip.remove(this.resNamePathMap[`${_name}_ske_json`]);
-                    this.jsZip.remove(this.resNamePathMap[`${_name}_tex_json`]);
-                    this.jsZip.remove(this.resNamePathMap[`${_name}_tex_png`]);
-                    delete this.resNamePathMap[`${_name}_ske_json`];
-                    delete this.resNamePathMap[`${_name}_tex_json`];
-                    delete this.resNamePathMap[`${_name}_tex_png`];
-                }
-                else if (this.resNamePathMap[_name]) {
-                    let str = this.resNamePathMap[_name];
-                    this.jsZip.remove(str);
-                    delete this.resNamePathMap[_name];
-                }
-            }
             if (!this.resCache[_name]) {
-                console.error(`error : ${_name}`);
+                console.error(`error : ${_name} 获取失败！`);
+            } else {
+                // 删除压缩包内的指定资源，以节省内存占用空间
+                if (this.resNamePathMap[_name]) {
+                    this.jsZip.remove(this.resNamePathMap[_name]);
+                }
             }
+
             return this.resCache[_name];
         }
 
@@ -196,7 +183,7 @@ module jszip {
                     this.jsZip.remove(this.textureSheet[arr[i]] + "_json");
                 }
                 if (this.textureSheet[arr[i]].indexOf(_name) != -1) {
-                    let sheetConfig = await this.getJson<SheetDataByType>(`${arr[i]}_json`);
+                    let sheetConfig = await this.getJson<DataType_sheet>(`${arr[i]}_json`);
                     let sheetTexture = await this.getTexture(`${arr[i]}_png`);
                     let spriteSheet = new egret.SpriteSheet(sheetTexture);
                     let texture = spriteSheet.createTexture(
@@ -215,27 +202,6 @@ module jszip {
                 }
             }
             return null;
-        }
-
-        /**
-         * 获取一个龙骨对象
-         * @param _name 资源名称
-         * @param _args 骨架数据名称
-         */
-        private async getDragonBones(_name: string, _args: dragonBonesDataByType) {
-            if (!_args) {
-                console.error(`${_name}  未传入指定参数`);
-                return;
-            }
-            let factory = dragonBones.EgretFactory.factory;
-            let dragonbonesData = await this.getJson(`${_name}_ske_json`);
-            let textureData = await this.getJson(`${_name}_tex_json`);
-            let texture = await this.getTexture(`${_name}_tex_png`);
-            factory.parseDragonBonesData(dragonbonesData, _name);
-            factory.parseTextureAtlasData(textureData, texture, _name);
-            let armatureDisplay = factory.buildArmatureDisplay(_args.armatureName, _name);
-            armatureDisplay.animation.play(_args.animationName != null ? _args.animationName : "", _args.playTimes != null ? _args.playTimes : -1);
-            return armatureDisplay;
         }
 
         /**
@@ -260,18 +226,12 @@ module jszip {
          * @returns 读取文件所用的`Processor`类型
          */
         private typeSelector(_name: string): string {
-            let ext = "";
-            if (this.resNamePathMap[`${_name}_ske_json`] && this.resNamePathMap[`${_name}_tex_json`] && this.resNamePathMap[`${_name}_tex_png`]) {
-                ext = FILE_TYPE.TYPE_DRAGONBONES;
-            } else {
-                ext = _name.substr(_name.lastIndexOf("_") + 1);
-            }
+            let ext = _name.substr(_name.lastIndexOf("_") + 1);
             let type: string;
             switch (ext) {
-                case FILE_TYPE.TYPE_XML:
-                case FILE_TYPE.TYPE_JSON:
-                case FILE_TYPE.TYPE_SHEET:
-                case FILE_TYPE.TYPE_DRAGONBONES:
+                case ENUM_FILE_TYPE.TYPE_XML:
+                case ENUM_FILE_TYPE.TYPE_JSON:
+                case ENUM_FILE_TYPE.TYPE_SHEET:
                     type = ext;
                     break;
                 case "png":
@@ -279,13 +239,13 @@ module jszip {
                 case "gif":
                 case "jpeg":
                 case "bmp":
-                    type = FILE_TYPE.TYPE_IMAGE;
+                    type = ENUM_FILE_TYPE.TYPE_IMAGE;
                     break;
                 case "fnt":
-                    type = FILE_TYPE.TYPE_FONT;
+                    type = ENUM_FILE_TYPE.TYPE_FONT;
                     break;
                 case "txt":
-                    type = FILE_TYPE.TYPE_TEXT;
+                    type = ENUM_FILE_TYPE.TYPE_TEXT;
                     break;
                 case "mp3":
                 case "ogg":
@@ -296,7 +256,7 @@ module jszip {
                 case "aiff":
                 case "wma":
                 case "mid":
-                    type = FILE_TYPE.TYPE_SOUND;
+                    type = ENUM_FILE_TYPE.TYPE_SOUND;
                     break;
                 case "mergeJson":
                 case "zip":
@@ -304,29 +264,13 @@ module jszip {
                     type = ext;
                     break;
                 case "ttf":
-                    type = FILE_TYPE.TYPE_TTF;
+                    type = ENUM_FILE_TYPE.TYPE_TTF;
                 default:
-                    type = FILE_TYPE.TYPE_BIN;
+                    type = ENUM_FILE_TYPE.TYPE_BIN;
                     break;
             }
             return type;
         }
-    }
-
-    /**
-     * 文件类型
-     */
-    enum FILE_TYPE {
-        TYPE_XML = "xml",
-        TYPE_IMAGE = "image",
-        TYPE_BIN = "bin",
-        TYPE_TEXT = "text",
-        TYPE_JSON = "json",
-        TYPE_SHEET = "sheet",
-        TYPE_FONT = "font",
-        TYPE_SOUND = "sound",
-        TYPE_TTF = "ttf",
-        TYPE_DRAGONBONES = "dragonBones"
     }
 
     export let jsZipCoreCodeLib = new JsZipCoreCodeLib();

@@ -178,10 +178,25 @@ class Main extends eui.UILayer {
         sheetImg.x = 200;
         sheetImg.y = 200;
 
-        let getDragonBones = await jszip.jsZipCoreCodeLib.getRes<dragonBones.EgretArmatureDisplay>("buyu", { armatureName: "buyu", animationName: "buyu", playTimes: 0 });
-        this.addChild(getDragonBones);
-        getDragonBones.x = getDragonBones.width;
-        getDragonBones.y = getDragonBones.height;
+        // 龙骨动画
+        for (let i = -1; i < 3; i++) {
+            let dragonBone = await jszip.DragonBoneSprite.create("buyu", {
+                armatureName: "buyu",
+                animationName: "buyu",
+                playTimes: i,
+                completeHandler: (e) => { console.info(e.target, e.type); },
+                startPlayHandler: (e) => { console.info(e.target, e.type); },
+                completeLoopHandler: (e) => { console.info(e.target, e.type); }
+            });
+
+            this.addChild(dragonBone);
+            dragonBone.x = dragonBone.width * (i + 2) * 0.5;
+            dragonBone.y = dragonBone.height * (i + 2) * 0.5;
+            if (i == 2) {
+                this.removeChild(dragonBone);
+            }
+        }
+
     }
 
     /**
