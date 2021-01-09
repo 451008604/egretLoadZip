@@ -1,4 +1,7 @@
 namespace jszip {
+    /**
+     * @author ghq `create by 2020-12-27`
+     */
     class JsZipCoreCodeLib {
 
         private jsZip: JSZip;
@@ -69,7 +72,7 @@ namespace jszip {
             for (let i = 0; i < keys.length; i++) {
                 let fileName = keys[i].substring(0, keys[i].lastIndexOf("_"));
                 if (keys.indexOf(`${fileName}_png`) != -1 && keys.indexOf(`${fileName}_json`) != -1 && !this.textureSheet[fileName]) {
-                    let data = await this.getJson<DataType_sheet>(`${fileName}_json`);
+                    let data = await this.getRes(`${fileName}_json`) as DataType_sheet;
                     if (Object.keys(data).length == 2 && data.frames && data.file) {
                         this.textureSheet[fileName] = Object.keys(data.frames);
                         this.totalResName.push(...Object.keys(data.frames));
@@ -183,8 +186,8 @@ namespace jszip {
                     this.jsZip.remove(this.textureSheet[arr[i]] + "_json");
                 }
                 if (this.textureSheet[arr[i]].indexOf(_name) != -1) {
-                    let sheetConfig = await this.getJson<DataType_sheet>(`${arr[i]}_json`);
-                    let sheetTexture = await this.getTexture(`${arr[i]}_png`);
+                    let sheetConfig = await this.getRes(`${arr[i]}_json`) as DataType_sheet;
+                    let sheetTexture = await this.getRes(`${arr[i]}_png`);
                     let spriteSheet = new egret.SpriteSheet(sheetTexture);
                     let texture = spriteSheet.createTexture(
                         _name,
