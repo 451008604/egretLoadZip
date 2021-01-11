@@ -117,6 +117,7 @@ namespace jszip {
                 case ENUM_FILE_TYPE.TYPE_TEXT:
                     break;
                 case ENUM_FILE_TYPE.TYPE_SOUND:
+                    this.resCache[_name] = await this.getSound(_name);
                     break;
                 case ENUM_FILE_TYPE.TYPE_TTF:
                     break;
@@ -134,6 +135,15 @@ namespace jszip {
             }
 
             return this.resCache[_name];
+        }
+
+        /**
+         * 获取一个`json`数据
+         * @param _name 资源名称。例：xxxx_json
+         */
+        private async getJson<T = {}>(_name: string): Promise<T> {
+            let str = await this.getFileData(_name, "text");
+            return str ? JSON.parse(str) : {};
         }
 
         /**
@@ -163,15 +173,6 @@ namespace jszip {
                 console.groupEnd();
             }
             return texture;
-        }
-
-        /**
-         * 获取一个`json`数据
-         * @param _name 资源名称。例：xxxx_json
-         */
-        private async getJson<T = {}>(_name: string): Promise<T> {
-            let str = await this.getFileData(_name, "text");
-            return str ? JSON.parse(str) : {};
         }
 
         /**
@@ -208,6 +209,25 @@ namespace jszip {
         }
 
         /**
+         * 获取一个音频资源。
+         * @param _name 资源名称。例：sound_mp3
+         */
+        private getSound(_name): Promise<egret.Sound> {
+            return new Promise(async (resolve, reject) => {
+                let fileSuffix = _name.substr(_name.lastIndexOf("_") + 1);
+                let url = 'data:audio/' + fileSuffix + ';base64,' + await this.getFileData(_name, "base64");
+                let sound: egret.Sound = new egret.Sound();
+                sound.addEventListener(egret.Event.COMPLETE, (data: egret.Event) => {
+                    resolve(sound);
+                }, this);
+                sound.addEventListener(egret.IOErrorEvent.IO_ERROR, (data: egret.IOErrorEvent) => {
+                    reject(new Error(`${_name}音频资源获取失败：${data}`));
+                }, this);
+                sound.load(url);
+            })
+        }
+
+        /**
          * 获取一个文件内容
          * @param _name 资源名称
          * @param _dataType 要解析成的类型
@@ -229,13 +249,13 @@ namespace jszip {
          * @returns 读取文件所用的`Processor`类型
          */
         private typeSelector(_name: string): string {
-            let ext = _name.substr(_name.lastIndexOf("_") + 1);
+            let fileSuffix = _name.substr(_name.lastIndexOf("_") + 1);
             let type: string;
-            switch (ext) {
+            switch (fileSuffix) {
                 case ENUM_FILE_TYPE.TYPE_XML:
                 case ENUM_FILE_TYPE.TYPE_JSON:
                 case ENUM_FILE_TYPE.TYPE_SHEET:
-                    type = ext;
+                    type = fileSuffix;
                     break;
                 case "png":
                 case "jpg":
@@ -264,7 +284,7 @@ namespace jszip {
                 case "mergeJson":
                 case "zip":
                 case "pvr":
-                    type = ext;
+                    type = fileSuffix;
                     break;
                 case "ttf":
                     type = ENUM_FILE_TYPE.TYPE_TTF;

@@ -58,7 +58,7 @@ class Main extends eui.UILayer {
 
     private async runGame() {
 
-        await this.loadResource()
+        await this.loadResource();
         console.time("initRes");
         await jszip.jsZipCoreCodeLib.initRes();
         console.timeEnd("initRes");
@@ -163,15 +163,15 @@ class Main extends eui.UILayer {
 
         const result = await jszip.jsZipCoreCodeLib.getRes("description_json");
         this.startAnimation(result as any);
-
+        jszip.jsZipCoreCodeLib
 
         // 加载 sheet 内的资源
         for (let i = 0; i < 100; i++) {
             let sheetBg = new egret.Bitmap(await jszip.jsZipCoreCodeLib.getRes("bg(337)"));
             this.addChild(sheetBg);
-            sheetBg.x = i * 2;
-            sheetBg.y = stageH - sheetBg.height;
             sheetBg.scaleX = sheetBg.scaleY = i * 0.01;
+            sheetBg.x = i * 1;
+            sheetBg.y = (stageH - sheetBg.height / 2) - sheetBg.height / 2 * sheetBg.scaleY;
         }
         let sheetImg = new eui.Image(await jszip.jsZipCoreCodeLib.getRes("on_png"));
         this.addChild(sheetImg);
@@ -179,22 +179,50 @@ class Main extends eui.UILayer {
         sheetImg.y = 200;
 
         // 龙骨动画
-        for (let i = -1; i < 3; i++) {
-            let dragonBone = await jszip.DragonBoneSprite.create("buyu", {
+        for (let i = 0; i < 3; i++) {
+            let dragonBone = await jszip.dragonBoneSprite("buyu", {
                 armatureName: "buyu",
                 animationName: "buyu",
                 playTimes: i,
-                completeHandler: (e) => { console.info(e.target, e.type); },
-                startPlayHandler: (e) => { console.info(e.target, e.type); },
-                completeLoopHandler: (e) => { console.info(e.target, e.type); }
+                completeHandler: (e) => {
+                    // console.info(e.target, e.type);
+                },
+                startPlayHandler: (e) => {
+                    // console.info(e.target, e.type);
+                },
+                completeLoopHandler: (e) => {
+                    // console.info(e.target, e.type);
+                }
             });
 
             this.addChild(dragonBone);
-            dragonBone.x = dragonBone.width * (i + 2) * 0.5;
-            dragonBone.y = dragonBone.height * (i + 2) * 0.5;
+            dragonBone.scaleX = dragonBone.scaleY = 0.5;
+            dragonBone.x = dragonBone.width * (i + 0.5) * dragonBone.scaleX;
+            dragonBone.y = dragonBone.height * 0.5 * dragonBone.scaleY;
             if (i == 2) {
-                this.removeChild(dragonBone);
+                dragonBone.stop();
+                // this.removeChild(dragonBone);
             }
+        }
+
+        // MovieClip
+        let movieClip = await jszip.movieClipSprite("clipModel", { actionName: "actionClip", playTimes: -1 });
+        this.addChild(movieClip);
+        movieClip.x = 0;
+        movieClip.y = movieClip.height;
+        let blurFilter = new egret.BlurFilter(8, 8);
+        movieClip.filters = [blurFilter];
+
+        // Sound
+        await jszip.sound.createMusic("music");
+        jszip.sound.musicVolume = 0.5;
+        setTimeout(() => {
+            jszip.sound.musicStop();
+        }, 3000);
+
+        for (let i = 0; i < 50; i++) {
+            await jszip.sound.createEffect("soundEffect");
+            jszip.sound.effectVolume = (i + 1) * 0.02;
         }
 
     }
