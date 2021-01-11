@@ -6,11 +6,11 @@ PS：此方式为异步加载
 
 ## 支持项
 - **获取资源**  
-json、png、gif、jpg、jpeg、bmp  
+json、png、gif、jpg、jpeg、bmp、mp3、ogg、mpeg、wav、m4a、mp4、aiff、wma、mid  
 *`gif`格式建议使用`Texture Merger`工具转换成帧动画形式使用  
 `spriteSheet`内的`image`可直接通过二级资源名称获取到
 - **获取对象**  
-dragonBone、movieClip
+dragonBone、movieClip、Sound
 ***
 
 ## 使用方式
@@ -116,4 +116,21 @@ let movieClip = await jszip.movieClipSprite(
         playTimes: 0
     }
 );
+```
+
+## 获取音频
+```typescript
+// 此方式会生成一个全局唯一的背景音乐对象
+await jszip.sound.createMusic("xxxx");
+// 设置音量
+jszip.sound.musicVolume = 1;
+// 播放背景音乐
+jszip.sound.musicPlay();
+// 停止背景音乐（暂停）
+jszip.sound.musicStop();
+
+// 此方式会生成一个临时的音效对象
+await jszip.sound.createEffect("xxxx");
+// 设置音量
+jszip.sound.effectVolume = 1;
 ```
