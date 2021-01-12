@@ -4,15 +4,19 @@ namespace jszip {
      */
     class JsZipCoreCodeLib {
 
+        /**JSZIP解析得到的原始数据 */
         private jsZip: JSZip;
-        /**资源名称与文件路径的映射 */
-        public resNamePathMap: Object = Object.create(null);
         /**已经从压缩包内获取过的资源缓存 */
         private resCache: Object = Object.create(null);
         /**所有的纹理图集 */
         private textureSheet: Object = Object.create(null);
         /**包含`sheet`图集内资源和未合图资源的总名称列表 */
         private totalResName: string[] = [];
+        /**资源名称与文件路径的映射 */
+        public resNamePathMap: Object = Object.create(null);
+        public get zipData() {
+            return this.jsZip;
+        }
 
         public initRes() {
             return new Promise<JSZip>((resolve, reject) => {
@@ -300,5 +304,6 @@ namespace jszip {
         }
     }
 
+    /**核心库 */
     export const jsZipCoreCodeLib = new JsZipCoreCodeLib();
 }

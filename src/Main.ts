@@ -225,6 +225,8 @@ class Main extends eui.UILayer {
             jszip.sound.effectVolume = (i + 1) * 0.02;
         }
 
+        // 检查重复资源
+        console.info(await jszip.fileTools.checkingRepeatFile());
     }
 
     /**
