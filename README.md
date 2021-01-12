@@ -1,6 +1,6 @@
-# **egretLoadZip**
-此项目为`egret`通过`jszip`库加载并解析资源  
-基本替代了原有`assetsmanager`（因为只有在加载压缩包的时候使用到了）  
+# **egretLoadZip简介**
+此项目为`egret`通过`jszip`库解析并管理资源  
+完全替代了原有`assetsmanager`管理系统  
 PS：此方式为异步加载
 ***
 
@@ -15,7 +15,7 @@ dragonBone、movieClip、Sound
 
 ## 使用方式
 命令行安装`cross-zip`和`cross-zip-cli`
-```
+```typescript
 //全局安装  
 npm install cross-zip -g  
 npm install cross-zip-cli -g

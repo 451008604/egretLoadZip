@@ -15,52 +15,56 @@ namespace jszip {
         private totalResName: string[] = [];
 
         public initRes() {
-            return new Promise<JSZip>(async (resolve, reject) => {
-                // 加载压缩包文件
-                const data = await RES.getResAsync("assets_cfg");
-                RES.destroyRes("assets_cfg");
-                // 解析压缩包文件内容
-                const zipdata = await JSZip.loadAsync(data);
-                // 获取所有资源的相对路径
-                const filePathList = Object.keys(zipdata.files);
-                // 遍历files给每一项资源标记简称（file_jpg : "resource\assets\file.jpg"）
-                for (let i = 0; i < filePathList.length; i++) {
-                    // 文件完整路径
-                    const filePath = filePathList[i];
-                    // 文件后缀标记位置
-                    const lastPointNum = filePath.lastIndexOf(".");
-                    // 文件路径，不包含文件名
-                    const lastPathNum = filePath.lastIndexOf("\\");
-                    // 文件后缀
-                    const fileSuffix = filePath.substring(lastPointNum + 1);
-                    if (lastPointNum != -1) {
-                        let keyName = "";
-                        let fileName = "";
-                        // 如果不是在根目录下
-                        if (lastPathNum != -1) {
-                            fileName = filePath.substring(lastPathNum + 1, lastPointNum);
-                            keyName = `${fileName}_${fileSuffix}`;
-                        } else {
-                            fileName = filePath.substring(0, lastPointNum);
-                            keyName = `${fileName}_${fileSuffix}`;
+            return new Promise<JSZip>((resolve, reject) => {
+                const loadComplete = async (e: egret.Event) => {
+                    // 解析压缩包文件内容
+                    const zipdata = await JSZip.loadAsync(loader.data);
+                    // 获取所有资源的相对路径
+                    const filePathList = Object.keys(zipdata.files);
+                    // 遍历files给每一项资源标记简称（file_jpg : "resource\assets\file.jpg"）
+                    for (let i = 0; i < filePathList.length; i++) {
+                        // 文件完整路径
+                        const filePath = filePathList[i];
+                        // 文件后缀标记位置
+                        const lastPointNum = filePath.lastIndexOf(".");
+                        // 文件路径，不包含文件名
+                        const lastPathNum = filePath.lastIndexOf("\\");
+                        // 文件后缀
+                        const fileSuffix = filePath.substring(lastPointNum + 1);
+                        if (lastPointNum != -1) {
+                            let keyName = "";
+                            let fileName = "";
+                            // 如果不是在根目录下
+                            if (lastPathNum != -1) {
+                                fileName = filePath.substring(lastPathNum + 1, lastPointNum);
+                                keyName = `${fileName}_${fileSuffix}`;
+                            } else {
+                                fileName = filePath.substring(0, lastPointNum);
+                                keyName = `${fileName}_${fileSuffix}`;
+                            }
+                            this.resNamePathMap[keyName] = filePath;
+                            this.totalResName.push(keyName);
                         }
-                        this.resNamePathMap[keyName] = filePath;
-                        this.totalResName.push(keyName);
+                    }
+
+                    this.jsZip = zipdata;
+                    resolve(zipdata);
+
+                    this.getSheetList();
+
+                    if (DEBUG) {
+                        console.groupCollapsed("zip解析");
+                        console.info(`获取资源原始数据 : `, loader.data);
+                        console.info(`JSZIP解析原始数据 : `, zipdata);
+                        console.info(`资源名称和路径的映射 : `, this.resNamePathMap);
+                        console.groupEnd();
                     }
                 }
-
-                this.jsZip = zipdata;
-                resolve(zipdata);
-
-                this.getSheetList();
-
-                if (DEBUG) {
-                    console.groupCollapsed("zip解析");
-                    console.info(`获取资源原始数据 : `, data);
-                    console.info(`JSZIP解析原始数据 : `, zipdata);
-                    console.info(`资源名称和路径的映射 : `, this.resNamePathMap);
-                    console.groupEnd();
-                }
+                // 加载压缩包文件
+                const loader: egret.URLLoader = new egret.URLLoader();
+                loader.once(egret.Event.COMPLETE, loadComplete, this);
+                loader.dataFormat = egret.URLLoaderDataFormat.BINARY;
+                loader.load(new egret.URLRequest("resource/assets.cfg"));
             })
         }
 
