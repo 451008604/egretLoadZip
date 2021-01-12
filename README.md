@@ -14,6 +14,13 @@ dragonBone、movieClip、Sound
 ***
 
 ## 使用方式
+命令行安装`cross-zip`和`cross-zip-cli`
+```
+//全局安装  
+npm install cross-zip -g  
+npm install cross-zip-cli -g
+```
+
 在`egretProperties.json`内加入`jszip`、`dragonBones`两个必需库的引用。之后`egret build -e`编译引擎
 ```json
 {
