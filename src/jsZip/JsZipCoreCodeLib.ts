@@ -72,11 +72,11 @@ namespace jszip {
          * 获取图集`sheet`信息
          */
         private async getSheetList() {
-            let keys = Object.keys(this.resNamePathMap);
+            const keys = Object.keys(this.resNamePathMap);
             for (let i = 0; i < keys.length; i++) {
-                let fileName = keys[i].substring(0, keys[i].lastIndexOf("_"));
+                const fileName = keys[i].substring(0, keys[i].lastIndexOf("_"));
                 if (keys.indexOf(`${fileName}_png`) != -1 && keys.indexOf(`${fileName}_json`) != -1 && !this.textureSheet[fileName]) {
-                    let data = await this.getRes(`${fileName}_json`) as DataType_sheet;
+                    const data = await this.getRes(`${fileName}_json`) as DataType_sheet;
                     if (Object.keys(data).length == 2 && data.frames && data.file) {
                         this.textureSheet[fileName] = Object.keys(data.frames);
                         this.totalResName.push(...Object.keys(data.frames));
@@ -146,7 +146,7 @@ namespace jszip {
          * @param _name 资源名称。例：xxxx_json
          */
         private async getJson<T = {}>(_name: string): Promise<T> {
-            let str = await this.getFileData(_name, "text");
+            const str = await this.getFileData(_name, "text");
             return str ? JSON.parse(str) : {};
         }
 
@@ -184,17 +184,17 @@ namespace jszip {
          * @param _name 资源名称。例：image_png
          */
         private async getSheetSpriteTexture(_name: string) {
-            let arr = Object.keys(this.textureSheet);
+            const arr = Object.keys(this.textureSheet);
             for (let i = 0; i < arr.length; i++) {
                 if (this.textureSheet[arr[i]].length == 0) {
                     this.jsZip.remove(this.textureSheet[arr[i]] + "_png");
                     this.jsZip.remove(this.textureSheet[arr[i]] + "_json");
                 }
                 if (this.textureSheet[arr[i]].indexOf(_name) != -1) {
-                    let sheetConfig = await this.getRes(`${arr[i]}_json`) as DataType_sheet;
-                    let sheetTexture = await this.getRes(`${arr[i]}_png`);
-                    let spriteSheet = new egret.SpriteSheet(sheetTexture);
-                    let texture = spriteSheet.createTexture(
+                    const sheetConfig = await this.getRes(`${arr[i]}_json`) as DataType_sheet;
+                    const sheetTexture = await this.getRes(`${arr[i]}_png`);
+                    const spriteSheet = new egret.SpriteSheet(sheetTexture);
+                    const texture = spriteSheet.createTexture(
                         _name,
                         sheetConfig.frames[_name].x,
                         sheetConfig.frames[_name].y,
@@ -218,9 +218,9 @@ namespace jszip {
          */
         private getSound(_name): Promise<egret.Sound> {
             return new Promise(async (resolve, reject) => {
-                let fileSuffix = _name.substr(_name.lastIndexOf("_") + 1);
-                let url = 'data:audio/' + fileSuffix + ';base64,' + await this.getFileData(_name, "base64");
-                let sound: egret.Sound = new egret.Sound();
+                const fileSuffix = _name.substr(_name.lastIndexOf("_") + 1);
+                const url = 'data:audio/' + fileSuffix + ';base64,' + await this.getFileData(_name, "base64");
+                const sound: egret.Sound = new egret.Sound();
                 sound.addEventListener(egret.Event.COMPLETE, (data: egret.Event) => {
                     resolve(sound);
                 }, this);
@@ -300,5 +300,5 @@ namespace jszip {
         }
     }
 
-    export let jsZipCoreCodeLib = new JsZipCoreCodeLib();
+    export const jsZipCoreCodeLib = new JsZipCoreCodeLib();
 }

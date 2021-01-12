@@ -29,7 +29,7 @@ namespace jszip {
 		 * @param _args `DataType_dragonBone`类型参数
 		 */
 		static async create(_resName: string, _args: DataType_dragonBone): Promise<DragonBoneSprite> {
-			let display: DragonBoneSprite = new DragonBoneSprite();
+			const display: DragonBoneSprite = new DragonBoneSprite();
 			await display.init(_resName, _args.armatureName, _args.startPlayHandler, _args.completeHandler, _args.completeLoopHandler);
 			display.play(_args.animationName, _args.playTimes);
 			return display;
@@ -45,11 +45,11 @@ namespace jszip {
 		 */
 		private async init(_resName: string, _armatureName: string, _startPlayFun?: Function, _completeFun?: Function, _completeLoopFun?: Function) {
 			this.touchEnabled = true;
-			let factory = dragonBones.EgretFactory.factory;
+			const factory = dragonBones.EgretFactory.factory;
 
-			let dragonbonesData = await jsZipCoreCodeLib.getRes(`${_resName}_ske_json`);
-			let textureData = await jsZipCoreCodeLib.getRes(`${_resName}_tex_json`);
-			let texture = await jsZipCoreCodeLib.getRes(`${_resName}_tex_png`);
+			const dragonbonesData = await jsZipCoreCodeLib.getRes(`${_resName}_ske_json`);
+			const textureData = await jsZipCoreCodeLib.getRes(`${_resName}_tex_json`);
+			const texture = await jsZipCoreCodeLib.getRes(`${_resName}_tex_png`);
 
 			this.resName = _resName;
 			this.disName = dragonbonesData.name + "_" + DragonBoneSprite.disNameIndex++;
@@ -136,5 +136,5 @@ namespace jszip {
 		}
 	}
 
-	export let dragonBoneSprite = DragonBoneSprite.create;
+	export const dragonBoneSprite = DragonBoneSprite.create;
 }

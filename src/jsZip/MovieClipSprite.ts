@@ -20,7 +20,7 @@ namespace jszip {
          * @param _args `DataType_movieClip`类型参数
          */
         static async create(_resName: string, _args: DataType_movieClip): Promise<MovieClipSprite> {
-            let display: MovieClipSprite = new MovieClipSprite();
+            const display: MovieClipSprite = new MovieClipSprite();
             await display.init(_resName, _args.frameLabelHandler, _args.completeLoopHandler, _args.completeHandler);
             display.play(_args.actionName, _args.startFrame, _args.playTimes);
             return display;
@@ -35,8 +35,8 @@ namespace jszip {
          */
         private async init(_resName: string, _frameLabelHandler: Function, _completeFun?: Function, _completeLoopFun?: Function) {
             this.touchEnabled = true;
-            let movieClipData = await jsZipCoreCodeLib.getRes(`${_resName}_json`);
-            let texture = await jsZipCoreCodeLib.getRes(`${_resName}_png`);
+            const movieClipData = await jsZipCoreCodeLib.getRes(`${_resName}_json`);
+            const texture = await jsZipCoreCodeLib.getRes(`${_resName}_png`);
 
             this.mcFactory = new egret.MovieClipDataFactory(movieClipData, texture);
             this.mc = new egret.MovieClip();
@@ -99,5 +99,5 @@ namespace jszip {
         }
     }
 
-    export let movieClipSprite = MovieClipSprite.create;
+    export const movieClipSprite = MovieClipSprite.create;
 }
