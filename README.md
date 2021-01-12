@@ -1,6 +1,6 @@
 # **egretLoadZip简介**
 此项目为`egret`通过`jszip`库解析并管理资源  
-完全替代了原有`assetsmanager`管理系统  
+可完全脱离原有`assetsmanager`资源管理系统  
 PS：此方式为异步加载
 ***
 
@@ -10,7 +10,7 @@ json、png、gif、jpg、jpeg、bmp、mp3、ogg、mpeg、wav、m4a、mp4、aiff�
 *`gif`格式建议使用`Texture Merger`工具转换成帧动画形式使用  
 `spriteSheet`内的`image`可直接通过二级资源名称获取到
 - **获取对象**  
-dragonBone、movieClip、Sound
+dragonBone、movieClip、sound
 ***
 
 ## 使用方式
