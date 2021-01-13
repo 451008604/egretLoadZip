@@ -21,7 +21,7 @@ namespace jszip {
          * @param _loops 播放次数，默认值是 0，循环播放。 大于 0 为播放次数，如 1 为播放 1 次；小于等于 0，为循环播放
          */
         public async createMusic(_resName: string, _starTimer: number = 0, _loops: number = 0) {
-            this.music = await jsZipCoreCodeLib.getRes(_resName);
+            this.music = await coreCodeLib.getRes(_resName);
             this.music.type = egret.Sound.MUSIC;
             this.postion = 0;
             this.musicPlay(_starTimer, _loops);
@@ -71,7 +71,7 @@ namespace jszip {
          * @param _loops 播放次数，默认值是 0，循环播放。 大于 0 为播放次数，如 1 为播放 1 次；小于等于 0，为循环播放
          */
         public async createEffect(_resName: string, _starTimer: number = 0, _loops: number = 1) {
-            this.effect = await jsZipCoreCodeLib.getRes(_resName);
+            this.effect = await coreCodeLib.getRes(_resName);
             this.effect.type = egret.Sound.EFFECT;
             this.effectChannel = this.effect.play(_starTimer, _loops);
             this.effectChannel.volume = this.effectVolume;

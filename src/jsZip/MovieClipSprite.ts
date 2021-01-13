@@ -35,8 +35,8 @@ namespace jszip {
          */
         private async init(_resName: string, _frameLabelHandler: Function, _completeFun?: Function, _completeLoopFun?: Function) {
             this.touchEnabled = true;
-            const movieClipData = await jsZipCoreCodeLib.getRes(`${_resName}_json`);
-            const texture = await jsZipCoreCodeLib.getRes(`${_resName}_png`);
+            const movieClipData = await coreCodeLib.getRes(`${_resName}_json`);
+            const texture = await coreCodeLib.getRes(`${_resName}_png`);
 
             this.mcFactory = new egret.MovieClipDataFactory(movieClipData, texture);
             this.mc = new egret.MovieClip();

@@ -12,7 +12,7 @@ namespace jszip {
          * @param zipData `jszip`生成的解析内容
          * @returns 重复文件列表
          */
-        public async checkingRepeatFile(zipData: JSZip = jsZipCoreCodeLib.zipData) {
+        public async checkingRepeatFile(zipData: JSZip = coreCodeLib.zipData) {
             if (!DEBUG) return;
 
             let cached = Object.create(null);

@@ -2,7 +2,7 @@ namespace jszip {
     /**
      * @author ghq `create by 2020-12-27`
      */
-    class JsZipCoreCodeLib {
+    class CoreCodeLib {
 
         /**JSZIP解析得到的原始数据 */
         private jsZip: JSZip;
@@ -305,5 +305,5 @@ namespace jszip {
     }
 
     /**核心库 */
-    export const jsZipCoreCodeLib = new JsZipCoreCodeLib();
+    export const coreCodeLib = new CoreCodeLib();
 }

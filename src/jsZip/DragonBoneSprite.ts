@@ -47,9 +47,9 @@ namespace jszip {
 			this.touchEnabled = true;
 			const factory = dragonBones.EgretFactory.factory;
 
-			const dragonbonesData = await jsZipCoreCodeLib.getRes(`${_resName}_ske_json`);
-			const textureData = await jsZipCoreCodeLib.getRes(`${_resName}_tex_json`);
-			const texture = await jsZipCoreCodeLib.getRes(`${_resName}_tex_png`);
+			const dragonbonesData = await coreCodeLib.getRes(`${_resName}_ske_json`);
+			const textureData = await coreCodeLib.getRes(`${_resName}_tex_json`);
+			const texture = await coreCodeLib.getRes(`${_resName}_tex_png`);
 
 			this.resName = _resName;
 			this.disName = dragonbonesData.name + "_" + DragonBoneSprite.disNameIndex++;
