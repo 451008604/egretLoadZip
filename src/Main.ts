@@ -60,7 +60,7 @@ class Main extends eui.UILayer {
 
         await this.loadResource();
         console.time("initRes");
-        await jszip.jsZipCoreCodeLib.initRes();
+        await jszip.coreCodeLib.initRes();
         console.timeEnd("initRes");
         this.createGameScene();
         await platform.login();
@@ -103,7 +103,7 @@ class Main extends eui.UILayer {
         let stageW = this.stage.stageWidth;
         let stageH = this.stage.stageHeight;
         console.time();
-        let texture = await jszip.jsZipCoreCodeLib.getRes("bg_jpg") as egret.Texture;
+        let texture = await jszip.coreCodeLib.getRes("bg_jpg") as egret.Texture;
         console.timeEnd()
         let sky = new egret.Bitmap(texture);
         this.addChild(sky);
@@ -117,7 +117,7 @@ class Main extends eui.UILayer {
         topMask.y = 33;
         this.addChild(topMask);
 
-        texture = await jszip.jsZipCoreCodeLib.getRes<egret.Texture>("egret_icon_png");
+        texture = await jszip.coreCodeLib.getRes<egret.Texture>("egret_icon_png");
         let icon = new eui.Image(texture);
         this.addChild(icon);
         icon.x = 26;
@@ -161,19 +161,19 @@ class Main extends eui.UILayer {
         this.addChild(button);
         button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onButtonClick, this);
 
-        const result = await jszip.jsZipCoreCodeLib.getRes("description_json");
+        const result = await jszip.coreCodeLib.getRes("description_json");
         this.startAnimation(result as any);
-        jszip.jsZipCoreCodeLib
+        jszip.coreCodeLib
 
         // 加载 sheet 内的资源
         for (let i = 0; i < 100; i++) {
-            let sheetBg = new egret.Bitmap(await jszip.jsZipCoreCodeLib.getRes("bg(337)"));
+            let sheetBg = new egret.Bitmap(await jszip.coreCodeLib.getRes("bg(337)"));
             this.addChild(sheetBg);
             sheetBg.scaleX = sheetBg.scaleY = i * 0.01;
             sheetBg.x = i * 1;
             sheetBg.y = (stageH - sheetBg.height / 2) - sheetBg.height / 2 * sheetBg.scaleY;
         }
-        let sheetImg = new eui.Image(await jszip.jsZipCoreCodeLib.getRes("on_png"));
+        let sheetImg = new eui.Image(await jszip.coreCodeLib.getRes("on_png"));
         this.addChild(sheetImg);
         sheetImg.x = 200;
         sheetImg.y = 200;
