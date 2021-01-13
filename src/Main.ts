@@ -58,10 +58,10 @@ class Main extends eui.UILayer {
 
     private async runGame() {
 
-        await this.loadResource();
         console.time("initRes");
         await jszip.coreCodeLib.initRes();
         console.timeEnd("initRes");
+        await this.loadResource();
         this.createGameScene();
         await platform.login();
         const userInfo = await platform.getUserInfo();
@@ -75,7 +75,7 @@ class Main extends eui.UILayer {
             this.stage.addChild(loadingView);
             await RES.loadConfig("resource/default.res.json", "resource/");
             await this.loadTheme();
-            await RES.loadGroup("preload", 0, loadingView);
+            // await RES.loadGroup("preload", 0, loadingView);
             this.stage.removeChild(loadingView);
         }
         catch (e) {
@@ -161,9 +161,8 @@ class Main extends eui.UILayer {
         this.addChild(button);
         button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onButtonClick, this);
 
-        const result = await jszip.coreCodeLib.getRes("description_json");
-        this.startAnimation(result as any);
-        jszip.coreCodeLib
+        // const result = await jszip.coreCodeLib.getRes("description_json");
+        // this.startAnimation(result as any);
 
         // 加载 sheet 内的资源
         for (let i = 0; i < 100; i++) {
@@ -214,19 +213,21 @@ class Main extends eui.UILayer {
         movieClip.filters = [blurFilter];
 
         // Sound
-        await jszip.sound.createMusic("music");
-        jszip.sound.musicVolume = 0.5;
-        setTimeout(() => {
-            jszip.sound.musicStop();
-        }, 3000);
+        // await jszip.sound.createMusic("music");
+        // jszip.sound.musicVolume = 0.5;
+        // setTimeout(() => {
+        //     jszip.sound.musicStop();
+        // }, 3000);
 
-        for (let i = 0; i < 50; i++) {
-            await jszip.sound.createEffect("soundEffect");
-            jszip.sound.effectVolume = (i + 1) * 0.02;
-        }
+        // for (let i = 0; i < 50; i++) {
+        //     await jszip.sound.createEffect("soundEffect");
+        //     jszip.sound.effectVolume = (i + 1) * 0.02;
+        // }
 
         // 检查重复资源
         console.info(await jszip.fileTools.checkingRepeatFile());
+
+        console.info(await jszip.fileTools.checkingFileSuffix());
     }
 
     /**

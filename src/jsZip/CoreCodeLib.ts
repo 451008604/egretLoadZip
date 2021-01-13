@@ -52,9 +52,9 @@ namespace jszip {
                     }
 
                     this.jsZip = zipdata;
-                    resolve(zipdata);
+                    await this.getSheetList();
 
-                    this.getSheetList();
+                    resolve(zipdata);
 
                     if (DEBUG) {
                         console.groupCollapsed("zip解析");
@@ -88,7 +88,7 @@ namespace jszip {
                 }
             }
             if (DEBUG) {
-                console.info(`全部图集 sheet 信息：`, this.textureSheet);
+                console.info(`全部图集 sheet 信息：`, JSON.parse(JSON.stringify(this.textureSheet)));
             }
         }
 
@@ -150,7 +150,11 @@ namespace jszip {
          * @param _name 资源名称。例：xxxx_json
          */
         private async getJson<T = {}>(_name: string): Promise<T> {
-            const str = await this.getFileData(_name, "text");
+            let str: string = await this.getFileData(_name, "text");
+            // 防止json文件编码格式为 `UTF-8 with BOM` 
+            if (str.match("\\ufeff")) {
+                str = str.substring(1);
+            }
             return str ? JSON.parse(str) : {};
         }
 

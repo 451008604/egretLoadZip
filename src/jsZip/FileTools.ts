@@ -37,6 +37,22 @@ namespace jszip {
             }
             return output;
         }
+
+        /**
+         * 检查压缩包内含有的文件格式
+         * @param resNamePathMap 资源名称与文件路径的映射
+         * @returns 文件格式列表
+         */
+        public checkingFileSuffix(resNamePathMap: Object = coreCodeLib.resNamePathMap) {
+            let tempArr = [];
+            for (let i in resNamePathMap) {
+                let str: string = resNamePathMap[i];
+                if (tempArr.indexOf(str.substring(str.lastIndexOf(".") + 1)) == -1) {
+                    tempArr.push(str.substring(str.lastIndexOf(".") + 1));
+                }
+            }
+            return tempArr;
+        }
     }
 
     /**文件工具 */
