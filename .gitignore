@@ -3,4 +3,5 @@ bin-debug
 bin-release
 libs/modules
 resource/assets/myAssets
-scripts
+
+**/node_modules
