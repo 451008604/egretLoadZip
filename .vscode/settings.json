@@ -1,0 +1,9 @@
+{
+    "search.exclude": {
+        "**/bin-debug": true,
+        "**/bin-release": true,
+        ".vscode": true,
+        ".wing": true
+    },
+    "search.useIgnoreFiles": false,
+}

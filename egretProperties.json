@@ -31,5 +31,10 @@
       "name": "jszip",
       "path": "libs/libsrc/jszip"
     }
-  ]
+  ],
+  "eui": {
+    "exmlRoot": [
+      "resource/eui_skins"
+    ]
+  }
 }

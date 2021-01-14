@@ -9,16 +9,17 @@ namespace jszip {
 
         /**
          * 二进制对比方式检查重复文件。（只在开发环境下可用）
-         * @param zipData `jszip`生成的解析内容
+         * @param loaderData `URLLoader`生成的原始数据
          * @returns 重复文件列表
          */
-        public async checkingRepeatFile(zipData: JSZip = coreCodeLib.zipData) {
+        public async checkingRepeatFile(loaderData: any) {
             if (!DEBUG) return;
 
+            let temData = await JSZip.loadAsync(loaderData);
             let cached = Object.create(null);
             let output = Object.create(null);
-            for (let i in zipData.files) {
-                let base64 = await zipData.files[i].async("base64");
+            for (let i in temData.files) {
+                let base64 = await temData.files[i].async("base64");
                 if (base64) {
                     cached[i] = base64;
                 }
@@ -38,16 +39,17 @@ namespace jszip {
                     }
                 }
             }
+            temData = null;
             console.info("扫描出的重复文件：", output);
             return output;
         }
 
         /**
-         * 检查压缩包内含有的文件格式
+         * 检查压缩包内含有的文件格式。（只在开发环境下可用）
          * @param resNamePathMap 资源名称与文件路径的映射
          * @returns 文件格式列表
          */
-        public checkingFileSuffix(resNamePathMap: Object = coreCodeLib.resNamePathMap) {
+        public checkingFileSuffix(resNamePathMap: Object) {
             if (!DEBUG) return;
 
             let tempArr = [];

@@ -42,7 +42,7 @@ class AssetAdapter implements eui.IAssetAdapter {
         }
         if (jszip.coreCodeLib.resNamePathMap[source]) {
             let _data = await jszip.coreCodeLib.getRes(source);
-            onGetRes(_data)
+            onGetRes(_data);
         } else if (RES.hasRes(source)) {
             let data = RES.getRes(source);
             if (data) {
