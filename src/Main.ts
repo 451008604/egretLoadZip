@@ -154,28 +154,29 @@ class Main extends eui.UILayer {
         textfield.y = 135;
         this.textfield = textfield;
 
-        let button = new eui.Button();
-        button.label = "Click!";
-        button.horizontalCenter = 0;
-        button.verticalCenter = 0;
-        this.addChild(button);
-        button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onButtonClick, this);
-
         const result = await jszip.coreCodeLib.getRes("description_json");
         this.startAnimation(result as any);
 
-        // 加载 sheet 内的资源
         for (let i = 0; i < 100; i++) {
-            let sheetBg = new egret.Bitmap(await jszip.coreCodeLib.getRes("bg"));
+            let sheetBg = new egret.Bitmap(await jszip.coreCodeLib.getRes("bg(337)"));
             this.addChild(sheetBg);
             sheetBg.scaleX = sheetBg.scaleY = i * 0.005;
             sheetBg.x = i * 1;
             sheetBg.y = (stageH - sheetBg.height / 2) - sheetBg.height / 2 * sheetBg.scaleY;
         }
-        let sheetImg = new eui.Image(await jszip.coreCodeLib.getRes("on_png"));
-        this.addChild(sheetImg);
-        sheetImg.x = 200;
-        sheetImg.y = 200;
+        // 加载 sheet 内的资源
+        let on = new eui.Image(await jszip.coreCodeLib.getRes("on_png"));
+        this.addChild(on);
+        on.x = 200;
+        on.y = 200;
+        let handle = new eui.Image(await jszip.coreCodeLib.getRes("handle_png"));
+        this.addChild(handle);
+        handle.x = 250;
+        handle.y = 200;
+        let off = new eui.Image(await jszip.coreCodeLib.getRes("off_png"));
+        this.addChild(off);
+        off.x = 300;
+        off.y = 200;
 
         // 龙骨动画
         for (let i = 0; i < 3; i++) {
@@ -224,10 +225,21 @@ class Main extends eui.UILayer {
         //     jszip.sound.effectVolume = (i + 1) * 0.02;
         // }
 
-        // 检查重复资源
-        jszip.fileTools.checkingRepeatFile();
+        // bitmapFont
+        let font1 = await jszip.coreCodeLib.getRes("fontTest");
+        let bit: egret.BitmapText = new egret.BitmapText();
+        bit.font = font1;
+        bit.y = 120;
+        bit.x = 0;
+        bit.text = "HelloEgret！你好白鹭！！！";
+        this.addChild(bit);
 
-        jszip.fileTools.checkingFileSuffix();
+        let button = new eui.Button();
+        button.label = "Click!";
+        button.horizontalCenter = 0;
+        button.verticalCenter = 0;
+        this.addChild(button);
+        button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onButtonClick, this);
     }
 
     /**

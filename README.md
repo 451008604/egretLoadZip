@@ -5,11 +5,11 @@ PS：此方式为异步加载
 
 ## 支持项
 - **获取资源**  
-json、png、gif、jpg、jpeg、bmp、mp3、ogg、mpeg、wav、m4a、mp4、aiff、wma、mid  
+json、png、gif、jpg、jpeg、bmp、mp3、ogg、mpeg、wav、m4a、mp4、aiff、wma、mid、fnt  
 *`gif`格式建议使用`Texture Merger`工具转换成帧动画形式使用  
 `spriteSheet`内的`image`可直接通过二级资源名称获取到
 - **获取对象**  
-dragonBone、movieClip、sound
+dragonBone、movieClip、sound、bitmapFont
 
 ## 使用方式
 命令行安装`cross-zip`和`cross-zip-cli`
@@ -138,4 +138,15 @@ jszip.sound.musicStop();
 await jszip.sound.createEffect("xxxx");
 // 设置音量
 jszip.sound.effectVolume = 1;
+```
+
+## 获取位图字体
+```typescript
+// 只需传入`<fileName>`即可获取一个对应的`egret.BitmapFont`对象
+const font = await jszip.coreCodeLib.getRes("<fileName>");
+// 赋值给`egret.BitmapText`的`font`属性
+let text: egret.BitmapText = new egret.BitmapText();
+text.font = font;
+text.text = "xxxx";
+this.addChild(text);
 ```

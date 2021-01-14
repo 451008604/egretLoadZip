@@ -14,9 +14,6 @@ namespace jszip {
         private totalResName: string[] = [];
         /**资源名称与文件路径的映射 */
         public resNamePathMap: Object = Object.create(null);
-        public get zipData() {
-            return this.jsZip;
-        }
 
         public initRes() {
             return new Promise<JSZip>((resolve, reject) => {
@@ -57,8 +54,12 @@ namespace jszip {
 
                     this.jsZip = zipdata;
                     await this.getSheetList();
-
                     resolve(zipdata);
+
+                    // 检查重复资源。
+                    jszip.fileTools.checkingRepeatFile(loader.data);
+                    // 检查资源格式。
+                    jszip.fileTools.checkingFileSuffix(coreCodeLib.resNamePathMap);
 
                     if (DEBUG) {
                         console.groupCollapsed("zip解析");
@@ -125,6 +126,7 @@ namespace jszip {
                     this.resCache[_name] = await this.getTexture(_name);
                     break;
                 case ENUM_FILE_TYPE.TYPE_FONT:
+                    this.resCache[_name] = await this.getBitmapFont(_name);
                     break;
                 case ENUM_FILE_TYPE.TYPE_TEXT:
                     break;
@@ -198,11 +200,13 @@ namespace jszip {
         private async getSheetSpriteTexture(_name: string) {
             const arr = Object.keys(this.textureSheet);
             for (let i = 0; i < arr.length; i++) {
+                // length=0 说明该图集内的所有子图都已在 resCache 缓存完毕。
                 if (this.textureSheet[arr[i]].length == 0) {
                     this.jsZip.remove(this.textureSheet[arr[i]] + "_png");
                     this.jsZip.remove(this.textureSheet[arr[i]] + "_json");
                 }
-                if (this.textureSheet[arr[i]].indexOf(_name) != -1) {
+                const index = this.textureSheet[arr[i]].indexOf(_name);
+                if (index != -1) {
                     const sheetConfig = await this.getRes(`${arr[i]}_json`) as DataType_sheet;
                     const sheetTexture = await this.getRes(`${arr[i]}_png`);
                     const spriteSheet = new egret.SpriteSheet(sheetTexture);
@@ -217,11 +221,22 @@ namespace jszip {
                         sheetConfig.frames[_name].sourceW,
                         sheetConfig.frames[_name].sourceH
                     );
-                    this.textureSheet[arr[i]].splice(i, 1);
+                    this.textureSheet[arr[i]].splice(index, 1);
                     return texture;
                 }
             }
             return null;
+        }
+
+        /**
+         * 获取一个位图字体格式
+         * @param _name 资源名称。
+         */
+        private async getBitmapFont(_name: string) {
+            const fileName = _name.substring(0, _name.lastIndexOf("_"));
+            const texture = await this.getTexture(`${fileName}_png`);
+            const config = await this.getJson(`${fileName}_fnt`);
+            return new egret.BitmapFont(texture, config);
         }
 
         /**
