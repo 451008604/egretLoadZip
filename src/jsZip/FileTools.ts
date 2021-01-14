@@ -35,7 +35,27 @@ namespace jszip {
                     }
                 }
             }
+            console.info("扫描出的重复文件：", output);
             return output;
+        }
+
+        /**
+         * 检查压缩包内含有的文件格式
+         * @param resNamePathMap 资源名称与文件路径的映射
+         * @returns 文件格式列表
+         */
+        public checkingFileSuffix(resNamePathMap: Object = coreCodeLib.resNamePathMap) {
+            if (!DEBUG) return;
+
+            let tempArr = [];
+            for (let i in resNamePathMap) {
+                let str: string = resNamePathMap[i];
+                if (tempArr.indexOf(str.substring(str.lastIndexOf(".") + 1)) == -1) {
+                    tempArr.push(str.substring(str.lastIndexOf(".") + 1));
+                }
+            }
+            console.info("项目资源包含的文件格式：", tempArr);
+            return tempArr;
         }
     }
 
