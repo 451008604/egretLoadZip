@@ -31,8 +31,12 @@ namespace jszip {
                         const filePath = filePathList[i];
                         // 文件后缀标记位置
                         const lastPointNum = filePath.lastIndexOf(".");
-                        // 文件路径，不包含文件名
-                        const lastPathNum = filePath.lastIndexOf("\\");
+                        // 文件路径长度，不包含文件名。   filePath.lastIndexOf("/")适配mac环境
+                        const lastPathNum = filePath.lastIndexOf("\\") != -1 ? filePath.lastIndexOf("\\") : filePath.lastIndexOf("/");
+                        // mac下会把文件夹路径视为单文件，通过判断路径如果以`/`结尾则跳过处理
+                        if (lastPathNum + 1 == filePath.length) {
+                            continue;
+                        }
                         // 文件后缀
                         const fileSuffix = filePath.substring(lastPointNum + 1);
                         if (lastPointNum != -1) {
@@ -152,7 +156,7 @@ namespace jszip {
         private async getJson<T = {}>(_name: string): Promise<T> {
             let str: string = await this.getFileData(_name, "text");
             // 防止json文件编码格式为 `UTF-8 with BOM` 
-            if (str.match("\\ufeff")) {
+            if (str && str.match("\\ufeff")) {
                 str = str.substring(1);
             }
             return str ? JSON.parse(str) : {};

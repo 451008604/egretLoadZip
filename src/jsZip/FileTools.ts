@@ -18,7 +18,10 @@ namespace jszip {
             let cached = Object.create(null);
             let output = Object.create(null);
             for (let i in zipData.files) {
-                cached[i] = await zipData.files[i].async("base64");
+                let base64 = await zipData.files[i].async("base64");
+                if (base64) {
+                    cached[i] = base64;
+                }
             }
             for (let i in cached) {
                 let base64str1 = cached[i];

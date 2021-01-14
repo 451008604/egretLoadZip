@@ -163,13 +163,12 @@ class Main extends eui.UILayer {
 
         const result = await jszip.coreCodeLib.getRes("description_json");
         this.startAnimation(result as any);
-        jszip.coreCodeLib
 
         // 加载 sheet 内的资源
         for (let i = 0; i < 100; i++) {
-            let sheetBg = new egret.Bitmap(await jszip.coreCodeLib.getRes("bg(337)"));
+            let sheetBg = new egret.Bitmap(await jszip.coreCodeLib.getRes("bg"));
             this.addChild(sheetBg);
-            sheetBg.scaleX = sheetBg.scaleY = i * 0.01;
+            sheetBg.scaleX = sheetBg.scaleY = i * 0.005;
             sheetBg.x = i * 1;
             sheetBg.y = (stageH - sheetBg.height / 2) - sheetBg.height / 2 * sheetBg.scaleY;
         }
@@ -226,9 +225,9 @@ class Main extends eui.UILayer {
         // }
 
         // 检查重复资源
-        console.info(await jszip.fileTools.checkingRepeatFile());
+        jszip.fileTools.checkingRepeatFile();
 
-        console.info(await jszip.fileTools.checkingFileSuffix());
+        jszip.fileTools.checkingFileSuffix();
     }
 
     /**

@@ -50,6 +50,9 @@ namespace jszip {
 			const dragonbonesData = await coreCodeLib.getRes(`${_resName}_ske_json`);
 			const textureData = await coreCodeLib.getRes(`${_resName}_tex_json`);
 			const texture = await coreCodeLib.getRes(`${_resName}_tex_png`);
+			if (!dragonbonesData || !textureData || !texture) {
+				return;
+			}
 
 			this.resName = _resName;
 			this.disName = dragonbonesData.name + "_" + DragonBoneSprite.disNameIndex++;
@@ -80,7 +83,9 @@ namespace jszip {
 		 * @param _playTimes 循环次数，默认 -1。(-1：使用动画数据默认值，0：无限循环播放，[1~N]：循环播放 N 次)
 		 */
 		public play(_animationName: string = null, _playTimes: number = -1) {
-			if (this.armatureDisplay == null || this.curAniName == _animationName) return;
+			if (this.armatureDisplay == null || this.curAniName == _animationName) {
+				return;
+			}
 			if (_animationName != null) this.curAniName = _animationName;
 			if (_playTimes != -1) this.playTimes = _playTimes;
 			if (this.armatureDisplay && this.armatureDisplay.animation.hasAnimation(this.curAniName)) {
@@ -92,7 +97,9 @@ namespace jszip {
 		 * 暂停动画，如需恢复则调用 `play()` 不传参数即可
 		 */
 		public stop() {
-			if (this.armatureDisplay == null) return;
+			if (this.armatureDisplay == null) {
+				return;
+			}
 			this.armatureDisplay.animation.stop();
 		}
 

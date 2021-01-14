@@ -37,6 +37,9 @@ namespace jszip {
             this.touchEnabled = true;
             const movieClipData = await coreCodeLib.getRes(`${_resName}_json`);
             const texture = await coreCodeLib.getRes(`${_resName}_png`);
+            if (!movieClipData || !texture) {
+                return;
+            }
 
             this.mcFactory = new egret.MovieClipDataFactory(movieClipData, texture);
             this.mc = new egret.MovieClip();
@@ -64,6 +67,9 @@ namespace jszip {
          * @param _playTimes 播放次数，参数为整数。可选参数：`>=1`：设定播放次数，`<0`：循环播放，默认`0`：不改变播放次数
          */
         play(_actionName: string = "", _startFrame: string | number = 0, _playTimes: number = 0) {
+            if (!this.mc) {
+                return;
+            }
             if (_actionName) {
                 this.mc.movieClipData = this.mcFactory.generateMovieClipData(_actionName);
                 this.mc.gotoAndPlay(_startFrame, _playTimes);
