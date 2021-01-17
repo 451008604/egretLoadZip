@@ -9,7 +9,6 @@ namespace jszip {
         TYPE_BIN = "bin",
         TYPE_TEXT = "text",
         TYPE_JSON = "json",
-        TYPE_SHEET = "sheet",
         TYPE_FONT = "font",
         TYPE_SOUND = "sound",
         TYPE_TTF = "ttf"

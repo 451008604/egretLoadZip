@@ -30,8 +30,9 @@ const config: ResourceManagerConfig = {
                     // new IncrementCompilePlugin(),
                     new ZipPlugin({
                         mergeSelector: (path) => {
-                            if (path.indexOf("resource/assets/") >= 0) {
-                                return "/resource/assets.cfg";
+                            let arr = path.split("/");
+                            if (arr[2] && arr.length > 3) {
+                                return "resource/assets/" + arr[2] + ".cfg";
                             }
                             return "";
                         }

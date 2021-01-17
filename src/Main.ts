@@ -57,10 +57,6 @@ class Main extends eui.UILayer {
     }
 
     private async runGame() {
-
-        console.time("initRes");
-        await jszip.coreCodeLib.initRes();
-        console.timeEnd("initRes");
         await this.loadResource();
         this.createGameScene();
         await platform.login();
@@ -102,9 +98,8 @@ class Main extends eui.UILayer {
     protected async createGameScene() {
         let stageW = this.stage.stageWidth;
         let stageH = this.stage.stageHeight;
-        console.time();
         let texture = await jszip.coreCodeLib.getRes("bg_jpg") as egret.Texture;
-        console.timeEnd()
+        texture = await jszip.coreCodeLib.getRes("bg_jpg") as egret.Texture;
         let sky = new egret.Bitmap(texture);
         this.addChild(sky);
         sky.width = stageW;
@@ -157,6 +152,9 @@ class Main extends eui.UILayer {
         const result = await jszip.coreCodeLib.getRes("description_json");
         this.startAnimation(result as any);
 
+        const xml = await jszip.coreCodeLib.getRes("description_xml");
+        console.info(xml);
+
         for (let i = 0; i < 100; i++) {
             let sheetBg = new egret.Bitmap(await jszip.coreCodeLib.getRes("bg(337)"));
             this.addChild(sheetBg);
@@ -168,15 +166,15 @@ class Main extends eui.UILayer {
         let on = new eui.Image(await jszip.coreCodeLib.getRes("on_png"));
         this.addChild(on);
         on.x = 200;
-        on.y = 200;
+        on.y = 350;
         let handle = new eui.Image(await jszip.coreCodeLib.getRes("handle_png"));
         this.addChild(handle);
         handle.x = 250;
-        handle.y = 200;
-        let off = new eui.Image(await jszip.coreCodeLib.getRes("off_png"));
+        handle.y = 350;
+        let off = new eui.Image(await jszip.coreCodeLib.getRes("radiobutton_select_down"));
         this.addChild(off);
         off.x = 300;
-        off.y = 200;
+        off.y = 350;
 
         // 龙骨动画
         for (let i = 0; i < 3; i++) {
@@ -206,12 +204,16 @@ class Main extends eui.UILayer {
         }
 
         // MovieClip
-        let movieClip = await jszip.movieClipSprite("clipModel", { actionName: "actionClip", playTimes: -1 });
-        this.addChild(movieClip);
-        movieClip.x = 0;
-        movieClip.y = movieClip.height;
-        let blurFilter = new egret.BlurFilter(8, 8);
-        movieClip.filters = [blurFilter];
+        for (let i = 0; i < 300; i++) {
+            let movieClip = await jszip.movieClipSprite("clipModel", { actionName: "actionClip", playTimes: -1 });
+            this.addChild(movieClip);
+            movieClip.x = 0 + i;
+            movieClip.y = movieClip.height;
+            if (i == 299) {
+                let blurFilter = new egret.BlurFilter(8, 8);
+                movieClip.filters = [blurFilter];
+            }
+        }
 
         // Sound
         // await jszip.sound.createMusic("music");

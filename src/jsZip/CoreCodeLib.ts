@@ -11,11 +11,19 @@ namespace jszip {
         /**所有的纹理图集 */
         private textureSheet: Object = Object.create(null);
         /**包含`sheet`图集内资源和未合图资源的总名称列表 */
-        private totalResName: string[] = [];
+        private totalResName: Object = Object.create(null);
+        private _resNamePathMap: Object = Object.create(null);
         /**资源名称与文件路径的映射 */
-        public resNamePathMap: Object = Object.create(null);
+        public get resNamePathMap(): Object {
+            // 此方式返回一个_resNamePathMap副本，防止外部修改_resNamePathMap
+            return Object["assign"]({}, this._resNamePathMap);
+        }
 
-        public initRes() {
+        /**
+         * 加载并初始化资源
+         * @param _compressedPackageName 压缩包名称
+         */
+        public initRes(_compressedPackageName: string) {
             return new Promise<JSZip>((resolve, reject) => {
                 const loadComplete = async (e: egret.Event) => {
                     // 解析压缩包文件内容
@@ -28,36 +36,30 @@ namespace jszip {
                         const filePath = filePathList[i];
                         // 文件后缀标记位置
                         const lastPointNum = filePath.lastIndexOf(".");
-                        // 文件路径长度，不包含文件名。   filePath.lastIndexOf("/")适配mac环境
+                        // 文件路径长度，不包含文件名。   filePath.lastIndexOf("/")适配Unix风格路径
                         const lastPathNum = filePath.lastIndexOf("\\") != -1 ? filePath.lastIndexOf("\\") : filePath.lastIndexOf("/");
-                        // mac下会把文件夹路径视为单文件，通过判断路径如果以`/`结尾则跳过处理
+                        // Unix下会把文件夹路径视为单文件，通过判断路径如果以`/`结尾则跳过处理
                         if (lastPathNum + 1 == filePath.length) {
                             continue;
                         }
-                        // 文件后缀
-                        const fileSuffix = filePath.substring(lastPointNum + 1);
-                        if (lastPointNum != -1) {
-                            let keyName = "";
-                            let fileName = "";
-                            // 如果不是在根目录下
-                            if (lastPathNum != -1) {
-                                fileName = filePath.substring(lastPathNum + 1, lastPointNum);
-                                keyName = `${fileName}_${fileSuffix}`;
-                            } else {
-                                fileName = filePath.substring(0, lastPointNum);
-                                keyName = `${fileName}_${fileSuffix}`;
-                            }
-                            this.resNamePathMap[keyName] = filePath;
-                            this.totalResName.push(keyName);
+                        if (lastPointNum != -1 && lastPathNum != -1) {
+                            let keyName = filePath.substring(lastPathNum + 1).split(".").join("_");
+                            this._resNamePathMap[keyName] = filePath;
+                            this.totalResName[keyName] = keyName;
                         }
                     }
 
-                    this.jsZip = zipdata;
+                    // 多压缩包加载合并
+                    if (!this.jsZip) {
+                        this.jsZip = zipdata;
+                    } else {
+                        Object["assign"](this.jsZip.files, zipdata.files);
+                    }
                     await this.getSheetList();
-                    resolve(zipdata);
+                    resolve(this.jsZip);
 
                     // 检查重复资源。
-                    jszip.fileTools.checkingRepeatFile(loader.data);
+                    jszip.fileTools.checkingRepeatFile(this.jsZip.files);
                     // 检查资源格式。
                     jszip.fileTools.checkingFileSuffix(coreCodeLib.resNamePathMap);
 
@@ -69,11 +71,14 @@ namespace jszip {
                         console.groupEnd();
                     }
                 }
+                if (_compressedPackageName.indexOf("resource/assets/") == -1) {
+                    _compressedPackageName = "resource/assets/" + _compressedPackageName;
+                }
                 // 加载压缩包文件
                 const loader: egret.URLLoader = new egret.URLLoader();
                 loader.once(egret.Event.COMPLETE, loadComplete, this);
                 loader.dataFormat = egret.URLLoaderDataFormat.BINARY;
-                loader.load(new egret.URLRequest("resource/assets.cfg"));
+                loader.load(new egret.URLRequest(_compressedPackageName));
             })
         }
 
@@ -87,8 +92,11 @@ namespace jszip {
                 if (keys.indexOf(`${fileName}_png`) != -1 && keys.indexOf(`${fileName}_json`) != -1 && !this.textureSheet[fileName]) {
                     const data = await this.getRes(`${fileName}_json`) as DataType_sheet;
                     if (Object.keys(data).length == 2 && data.frames && data.file) {
-                        this.textureSheet[fileName] = Object.keys(data.frames);
-                        this.totalResName.push(...Object.keys(data.frames));
+                        let arr = Object.keys(data.frames);
+                        this.textureSheet[fileName] = arr;
+                        for (let name of arr) {
+                            this.totalResName[name] = name;
+                        }
                     }
                 }
             }
@@ -97,30 +105,23 @@ namespace jszip {
             }
         }
 
-
         /**
          * 获取资源通用方法。获取过的资源会缓存到`resCache`内，重复获取时可以节省性能
          * @param _name 资源名称
          */
         public async getRes<T = any>(_name: string): Promise<T> {
-            // 名称标准化
-            for (let i = 0, j = this.totalResName.length; i < j; i++) {
-                if (this.totalResName[i].indexOf(_name) == 0 && _name.length == this.totalResName[i].lastIndexOf("_")) {
-                    _name = this.totalResName[i];
-                    break;
-                }
-            }
+            _name = await this.nameNorming(_name);
+
             // 如果已经获取过，则直接从缓存内取出
             if (this.resCache[_name]) {
                 return this.resCache[_name];
             }
             switch (this.typeSelector(_name)) {
                 case ENUM_FILE_TYPE.TYPE_XML:
+                    this.resCache[_name] = await this.getXML(_name);
                     break;
                 case ENUM_FILE_TYPE.TYPE_JSON:
                     this.resCache[_name] = await this.getJson(_name);
-                    break;
-                case ENUM_FILE_TYPE.TYPE_SHEET:
                     break;
                 case ENUM_FILE_TYPE.TYPE_IMAGE:
                     this.resCache[_name] = await this.getTexture(_name);
@@ -136,6 +137,7 @@ namespace jszip {
                 case ENUM_FILE_TYPE.TYPE_TTF:
                     break;
                 case ENUM_FILE_TYPE.TYPE_BIN:
+                    this.resCache[_name] = await this.getFileData(_name, "arraybuffer");
                     break;
             }
 
@@ -152,16 +154,47 @@ namespace jszip {
         }
 
         /**
+         * 获取一个`xml`数据
+         * @param _name 资源名称。例：xxxx_xml
+         */
+        private async getXML(_name: string): Promise<any> {
+            let str: string = await this.getFileData(_name, "text");
+            // 防止文件编码格式为 `UTF-8 with BOM` 
+            if (str && str.match("\\ufeff")) {
+                str = str.substring(1);
+            }
+            let parser = new DOMParser();
+            let xmlDoc = parser.parseFromString(str, "text/xml");
+            let isParse = true;
+            function check(xmlDoc) {
+                for (let i = 0; i < xmlDoc.childNodes.length; i++) {
+                    let node_i = xmlDoc.childNodes[i];
+                    if (node_i.nodeType == 1 && node_i["localName"] != "parsererror") {
+                        check(node_i);
+                    } else {
+                        isParse = false;
+                    }
+                }
+            }
+            check(xmlDoc);
+            if (isParse) {
+                return egret.XML.parse(str);
+            } else {
+                return null;
+            }
+        }
+
+        /**
          * 获取一个`json`数据
          * @param _name 资源名称。例：xxxx_json
          */
         private async getJson<T = {}>(_name: string): Promise<T> {
             let str: string = await this.getFileData(_name, "text");
-            // 防止json文件编码格式为 `UTF-8 with BOM` 
+            // 防止文件编码格式为 `UTF-8 with BOM` 
             if (str && str.match("\\ufeff")) {
                 str = str.substring(1);
             }
-            return str ? JSON.parse(str) : {};
+            return str ? JSON.parse(str) : str;
         }
 
         /**
@@ -170,25 +203,18 @@ namespace jszip {
          * @param _dataType 要解析的类型。默认：arraybuffer
          */
         private async getTexture(_name: string, _dataType: JSZip.OutputType = "arraybuffer"): Promise<egret.Texture> {
-            let texture = new egret.Texture();
-            let fileData = null;
-            if (this.resNamePathMap[_name]) {
-                fileData = await this.getFileData(_name, _dataType);
+            let texture = null;
+            let fileData = await this.getFileData(_name, _dataType);
+            if (fileData) {
                 texture = await new Promise<egret.Texture>((resolve, reject) => {
                     egret.BitmapData.create(_dataType as any, fileData as any, (data) => {
+                        texture = new egret.Texture();
                         texture.bitmapData = data;
                         resolve(texture);
                     });
                 });
             } else {
                 texture = await this.getSheetSpriteTexture(_name);
-            }
-
-            if (DEBUG) {
-                console.groupCollapsed(`createBitmapByName  ${_name}`);
-                console.info(`fileData : `, fileData);
-                console.info(`texture : `, texture);
-                console.groupEnd();
             }
             return texture;
         }
@@ -210,17 +236,14 @@ namespace jszip {
                     const sheetConfig = await this.getRes(`${arr[i]}_json`) as DataType_sheet;
                     const sheetTexture = await this.getRes(`${arr[i]}_png`);
                     const spriteSheet = new egret.SpriteSheet(sheetTexture);
+                    const config = sheetConfig.frames[_name];
                     const texture = spriteSheet.createTexture(
-                        _name,
-                        sheetConfig.frames[_name].x,
-                        sheetConfig.frames[_name].y,
-                        sheetConfig.frames[_name].w,
-                        sheetConfig.frames[_name].h,
-                        sheetConfig.frames[_name].offX,
-                        sheetConfig.frames[_name].offY,
-                        sheetConfig.frames[_name].sourceW,
-                        sheetConfig.frames[_name].sourceH
+                        _name, config.x, config.y, config.w, config.h, config.offX, config.offY, config.sourceW, config.sourceH
                     );
+                    if (config["scale9grid"]) {
+                        let list: Array<string> = config["scale9grid"].split(",");
+                        texture["scale9Grid"] = new egret.Rectangle(parseInt(list[0]), parseInt(list[1]), parseInt(list[2]), parseInt(list[3]));
+                    }
                     this.textureSheet[arr[i]].splice(index, 1);
                     return texture;
                 }
@@ -263,14 +286,31 @@ namespace jszip {
          * @param _name 资源名称
          * @param _dataType 要解析成的类型
          */
-        private getFileData(_name: string, _dataType: JSZip.OutputType) {
-            if (DEBUG) {
-                console.groupCollapsed(`getFileData  ${_name}`);
-                console.info(`name : `, _name);
-                console.info(`dataType : `, _dataType);
-                console.groupEnd();
+        private async getFileData(_name: string, _dataType: JSZip.OutputType) {
+            return this.resNamePathMap[_name] ? this.jsZip.files[this.resNamePathMap[_name]].async<any>(_dataType) : this.jsZip.files[this.resNamePathMap[_name]];
+        }
+
+        /**
+         * 名称标准化
+         * @param _name 资源名称
+         */
+        private async nameNorming(_name: string) {
+            for (let i in this.totalResName) {
+                if (this.totalResName[i].indexOf(_name) == 0 && (_name.length == this.totalResName[i].lastIndexOf("_") || _name.length == this.totalResName[i].length)) {
+                    return this.totalResName[i];
+                }
             }
-            return this.resNamePathMap[_name] ? this.jsZip.files[this.resNamePathMap[_name]].async<any>(_dataType) : console.error(`压缩文件内未找到 ${_name} 资源`);
+            // 加载新的压缩包
+            for (let i in generateResourceConfig) {
+                let temp1 = generateResourceConfig[i];
+                for (let j in temp1) {
+                    if (j.indexOf(_name) == 0 && (_name.length == j.lastIndexOf("_") || _name.length == j.length)) {
+                        await this.initRes(i + ".cfg");
+                        return await this.nameNorming(_name);
+                    }
+                }
+            }
+            return _name;
         }
 
         /**
@@ -280,12 +320,14 @@ namespace jszip {
          * @returns 读取文件所用的`Processor`类型
          */
         private typeSelector(_name: string): string {
+            if (!_name) {
+                console.info(_name)
+            }
             let fileSuffix = _name.substr(_name.lastIndexOf("_") + 1);
             let type: string;
             switch (fileSuffix) {
                 case ENUM_FILE_TYPE.TYPE_XML:
                 case ENUM_FILE_TYPE.TYPE_JSON:
-                case ENUM_FILE_TYPE.TYPE_SHEET:
                     type = fileSuffix;
                     break;
                 case "png":
