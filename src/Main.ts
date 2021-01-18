@@ -242,6 +242,16 @@ class Main extends eui.UILayer {
         button.verticalCenter = 0;
         this.addChild(button);
         button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onButtonClick, this);
+
+        await jszip.coreCodeLib.getRes("https://godlike.h5qlyx.com/lyconfig/lyqp/sound/1/hu.mp3");
+        await jszip.coreCodeLib.getRes("https://godlike.h5qlyx.com/lyconfig/lyqp/item.text");
+
+        let data = await jszip.coreCodeLib.getRes("https://dss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=3140403455,2984550794&fm=26&gp=0.jpg");
+        let imgByUrl = new egret.Bitmap(data);
+        this.addChild(imgByUrl);
+        imgByUrl.width = imgByUrl.height = 200;
+        imgByUrl.x = 0;
+        imgByUrl.y = 300;
     }
 
     /**

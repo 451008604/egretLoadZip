@@ -110,7 +110,11 @@ namespace jszip {
          * @param _name 资源名称
          */
         public async getRes<T = any>(_name: string): Promise<T> {
-            _name = await this.nameNorming(_name);
+            if (_name.indexOf("http://") == 0 || _name.indexOf("https://") == 0) {
+                this.resCache[_name] = await this.getResourceByUrl(_name);
+            } else {
+                _name = await this.nameNorming(_name);
+            }
 
             // 如果已经获取过，则直接从缓存内取出
             if (this.resCache[_name]) {
@@ -152,6 +156,65 @@ namespace jszip {
 
             return this.resCache[_name];
         }
+
+        /**
+         * 获取一个网络资源
+         * @param _url 网络地址
+         */
+        private async getResourceByUrl(_url: string) {
+            return await new Promise((resolve, reject) => {
+                egret.ImageLoader.crossOrigin = "anonymous";
+                const loader: egret.URLLoader = new egret.URLLoader();
+                let loadComplete = (event: egret.Event) => { };
+                let arr = _url.split("/");
+                let str = arr[arr.length - 1];
+                let index = str.indexOf("?");
+                let name = "";
+                if (index != -1) {
+                    name = str.substring(0, index).split(".").join("_");
+                } else {
+                    name = str.substring(0).split(".").join("_");
+                }
+                switch (this.typeSelector(name)) {
+                    case ENUM_FILE_TYPE.TYPE_IMAGE:
+                        loader.dataFormat = egret.URLLoaderDataFormat.TEXTURE;
+                        loadComplete = (event: egret.Event) => {
+                            resolve(event.target.data);
+                        };
+                        break;
+                    case ENUM_FILE_TYPE.TYPE_JSON:
+                        loader.dataFormat = egret.URLLoaderDataFormat.TEXT;
+                        loadComplete = (event: egret.Event) => {
+                            resolve(JSON.parse(event.target.data));
+                        };
+                        break;
+                    case ENUM_FILE_TYPE.TYPE_TEXT:
+                        loader.dataFormat = egret.URLLoaderDataFormat.TEXT;
+                        loadComplete = (event: egret.Event) => {
+                            resolve(event.target);
+                        };
+                        break;
+                    case ENUM_FILE_TYPE.TYPE_SOUND:
+                        loader.dataFormat = egret.URLLoaderDataFormat.SOUND;
+                        loadComplete = (event: egret.Event) => {
+                            resolve(event.target);
+                        };
+                        break;
+                    default:
+                        loader.dataFormat = egret.URLLoaderDataFormat.BINARY;
+                        loadComplete = (event: egret.Event) => {
+                            resolve(event.target.data);
+                        };
+                        break;
+                }
+                loader.once(egret.Event.COMPLETE, loadComplete, this);
+                loader.once(egret.IOErrorEvent.IO_ERROR, (event: egret.IOErrorEvent) => {
+                    resolve(null);
+                }, this);
+                loader.load(new egret.URLRequest(_url));
+            });
+        }
+
 
         /**
          * 获取一个`xml`数据
@@ -275,7 +338,7 @@ namespace jszip {
                     resolve(sound);
                 }, this);
                 sound.addEventListener(egret.IOErrorEvent.IO_ERROR, (data: egret.IOErrorEvent) => {
-                    reject(new Error(`${_name}音频资源获取失败：${data}`));
+                    reject(console.error(`${_name}音频资源获取失败：${data}`));
                 }, this);
                 sound.load(url);
             })
@@ -320,9 +383,6 @@ namespace jszip {
          * @returns 读取文件所用的`Processor`类型
          */
         private typeSelector(_name: string): string {
-            if (!_name) {
-                console.info(_name)
-            }
             let fileSuffix = _name.substr(_name.lastIndexOf("_") + 1);
             let type: string;
             switch (fileSuffix) {
